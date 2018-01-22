@@ -26,9 +26,7 @@ timestamps {
 
             stage("Init") {
                 printStage("Init")
-				schemaNavn = schema()
-                info(schemaNavn)
-                env.JAVA_HOME = "${tool 'jdk-1.8'}"
+				env.JAVA_HOME = "${tool 'jdk-1.8'}"
                 env.PATH = "${tool 'maven-3.3.9'}/bin:${env.PATH}"
                 step([$class: 'WsCleanup'])
                 checkout scm
@@ -42,7 +40,7 @@ timestamps {
                     configFileProvider(
                             [configFile(fileId: 'navMavenSettings', variable: 'MAVEN_SETTINGS')]) {
 					     mavenProps=" -Dfile.encoding=UTF-8 -Djava.security.egd=file:///dev/urandom -DinstallAtEnd=true -DdeployAtEnd=true "
-                        sh 'mvn -B -DinstallAtEnd=true -DdeployAtEnd=true -s $MAVEN_SETTINGS ' + skipUTests + ' ' + skipITests + ' ' + mavenProps + ' -Des.database.user=' + schemaNavn + ' clean deploy'
+                        sh 'mvn -B -DinstallAtEnd=true -DdeployAtEnd=true -s $MAVEN_SETTINGS ' + skipUTests + ' ' + skipITests + ' ' + mavenProps + ' clean deploy'
                     }
 
                     if (!skipITests) {
@@ -85,24 +83,4 @@ void printStage(stage) {
     ansiColor('xterm') {
         println "\033[46m Entered stage " + stage + " \033[0m"
     }
-}
-
-@NonCPS
-def String schema() {
-    def schema = ''
-    def branchArr = env.BRANCH_NAME.tokenize("/")
-    def size = branchArr.size
-    if (size == 2) {
-        schema = branchArr[0].take(1) + '_' + branchArr[1]
-    } else {
-        schema = branchArr[0]
-    }
-
-    def maxLenth = 10
-    if(schema.size() > maxLenth) {
-        schema = schema.substring(0, maxLenth)
-    }
-    schema = schema.replaceAll('\\.', '_').replaceAll('-','_') + '_' + env.EXECUTOR_NUMBER
-
-    return 'fe_' + schema
 }
