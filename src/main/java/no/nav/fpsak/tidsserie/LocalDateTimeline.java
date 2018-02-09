@@ -240,7 +240,7 @@ public class LocalDateTimeline<V> implements Serializable {
      * <p>
      * NB: Nåværende implementasjon er kun egnet for mindre datasett (eks. &lt; x1000 segmenter).
      * Spesielt join har høyt minneforbruk og O(n^2) ytelse. (potensiale for å forbedre algoritme til O(nlogn)) men øker
-     * kompleksitet.  Ytelsen er nær uavhengig av type {@link JoinStyle}.
+     * kompleksitet. Ytelsen er nær uavhengig av type {@link JoinStyle}.
      */
     public <T, R> LocalDateTimeline<R> combine(final LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator,
             final JoinStyle combinationStyle) {
@@ -447,8 +447,7 @@ public class LocalDateTimeline<V> implements Serializable {
             return true;
         } else {
             LocalDateInterval datoInterval = datoSegment.getLocalDateInterval();
-            if (datoInterval.getFomDato().isAfter(this.getMaxLocalDate())
-                    || datoInterval.getTomDato().isBefore(this.getMaxLocalDate())) {
+            if (!this.overlaps(datoInterval)) {
                 segments.add(datoSegment);
                 return true;
             } else {
@@ -463,6 +462,11 @@ public class LocalDateTimeline<V> implements Serializable {
             }
         }
 
+    }
+
+    public boolean overlaps(LocalDateInterval datoInterval) {
+        return datoInterval.getFomDato().isBefore(this.getMaxLocalDate().plusDays(1))
+                && datoInterval.getTomDato().isAfter(this.getMinLocalDate().minusDays(1));
     }
 
     private void addWhenOverlap(LocalDateSegment<V> datoSegment, LocalDateSegmentCombinator<V, V, V> overlapCombinator,
