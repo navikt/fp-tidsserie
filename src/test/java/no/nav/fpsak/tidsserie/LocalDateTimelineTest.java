@@ -11,12 +11,6 @@ import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import no.nav.fpsak.tidsserie.LocalDateInterval;
-import no.nav.fpsak.tidsserie.LocalDateSegment;
-import no.nav.fpsak.tidsserie.LocalDateTimeline;
-import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter;
-import no.nav.fpsak.tidsserie.StandardCombinators;
-
 public class LocalDateTimelineTest {
 
     LocalDate today = LocalDate.now();
@@ -190,7 +184,7 @@ public class LocalDateTimelineTest {
 
     }
 
-    @Ignore("Micro performance test - kun for spesielt interesserte!")
+    @Ignore("Micro performance test - kun for spesielt interesserte! Kan brukes til å avsjekke forbedringer i join algoritme")
     @Test
     public void kjapp_ytelse_test() throws Exception {
 

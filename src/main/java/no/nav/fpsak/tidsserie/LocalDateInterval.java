@@ -22,13 +22,19 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateIntervalSerializer;
 
 /**
- * Basis klasse for modellere et interval for LocalDate. Intern representasjon benytter fom/tom istdf. fom/til da dette
- * er innarbeidet i de fleste modeller i Nav.
+ * Denne modellerer et interval av to LocalDate. Intern representasjon benytter fom/tom istdf. fom/til da dette
+ * er innarbeidet i de fleste modeller i Nav, og mindre forvirrende ved lesing.
+ * <p>
+ * API'et er modellert etter metoder fra java.time og threeten-extra Interval.
+ * 
+ * <p>
+ * (Det er relativt lett å utvide til ikke-inklusive intervaller, dersom det er behov for det.)
  */
 @JsonSerialize(using = LocalDateIntervalSerializer.class)
 public class LocalDateInterval implements Comparable<LocalDateInterval>, Serializable {
 
-    public static final Comparator<LocalDateInterval> ORDER_INTERVALS = Comparator.comparing(LocalDateInterval::getFomDato).thenComparing(LocalDateInterval::getTomDato);
+    public static final Comparator<LocalDateInterval> ORDER_INTERVALS = Comparator.comparing(LocalDateInterval::getFomDato)
+            .thenComparing(LocalDateInterval::getTomDato);
 
     /** bruker en verdi til å representere åpen start, forenkle en del algoritmer. */
     public static final LocalDate TIDENES_BEGYNNELSE = LocalDate.of(-4712, Month.JANUARY, 1);
@@ -212,7 +218,7 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
         this.overlap(annen).ifPresent(o -> resultat.add(o));
         return resultat;
     }
-    
+
     /**
      * Splitter dette intervallet mot et annet.
      * Hvis de er like, returnerer this

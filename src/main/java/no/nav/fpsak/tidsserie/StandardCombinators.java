@@ -29,10 +29,13 @@ public class StandardCombinators {
         // private
     }
 
-    /** Returner alle verdier. */
+    /**
+     * Returner liste alle verdier fra begge tidsserier angitt. Det anbefales først og fremst benyttet for tidsserier
+     * med verdier av samme type, men det er ikke et krav.
+     */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static <V> LocalDateSegment<List> allValues(LocalDateInterval dateInterval,
-            LocalDateSegment<List<?>> lhs, LocalDateSegment<V> rhs) {
+    public static LocalDateSegment<List> allValues(LocalDateInterval dateInterval,
+            LocalDateSegment<List<?>> lhs, LocalDateSegment<?> rhs) {
         List list = new ArrayList<>(lhs.getValue());
         list.add(rhs.getValue());
         return new LocalDateSegment<>(dateInterval, list);
@@ -85,15 +88,14 @@ public class StandardCombinators {
     }
 
     /**
-     * Basic combinator som alltid returnerer verdi fra første (Left-Hand Side) timeline hvis finnes, ellers andre.
-     * Støtter ikke null input.
+     * Basic combinator som sum av verdi fra begge segmenter
      */
     public static <L extends Number, R extends Number> LocalDateSegment<L> sum(LocalDateInterval dateInterval,
             LocalDateSegment<L> lhs, LocalDateSegment<R> rhs) {
 
         return new LocalDateSegment<>(dateInterval, sum(lhs.getValue(), rhs.getValue()));
     }
-
+    
     @SuppressWarnings("unchecked")
     private static <L extends Number, R extends Number> L sum(L lhs, R rhs) {
         if (lhs == null && rhs == null) {

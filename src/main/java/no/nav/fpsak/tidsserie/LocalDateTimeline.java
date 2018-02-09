@@ -25,20 +25,25 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateTimelineSerializer;
 
 /**
- * En tidslinje bestående av DatoSegmenter [fom, tom] med tilhørende verdi.
+ * En tidslinje bestående av {@link LocalDateSegment}s med [fom, tom] med tilhørende verdi.
  * 
- * Tidslinjen bygges av "unordered" og "disjointed" intervaller, men støtter p.t. ikke overlappende intervaller.
+ * Tidslinjen bygges av "unordered" og "disjointed" intervaller, men støtter p.t. ikke overlappende intervaller med
+ * mindre en {@link LocalDateSegmentCombinator} funksjon angis.
+ * 
  * Derimot kan to tidsserier kombineres vha. en {@link LocalDateSegmentCombinator} funksjon.
  * <p>
- * De fleste algoritmene er relativt O(n) og ikke optimale for 10000+ verdier.
+ * De fleste algoritmene for å kombinere to tidsserier er O(n^2) og ikke optimale for sammenstilling av 1000+ verdier.
+ * <p>
+ * API'et er modellert etter metoder fra java.time og threeten-extra Interval.
  * 
  * @param <V>
- *            type av Verdi
+ *            Java type for verdier i tidsserien.
  */
 @JsonSerialize(using = LocalDateTimelineSerializer.class)
 public class LocalDateTimeline<V> implements Serializable {
 
-    private static final class SegmentSplitter<V> implements BiFunction<LocalDateInterval, LocalDateSegment<V>, LocalDateSegment<V>>, Serializable {
+    private static final class SegmentSplitter<V>
+            implements BiFunction<LocalDateInterval, LocalDateSegment<V>, LocalDateSegment<V>>, Serializable {
         @Override
         public LocalDateSegment<V> apply(LocalDateInterval di, LocalDateSegment<V> seg) {
             if (di.equals(seg.getLocalDateInterval())) {
@@ -59,38 +64,49 @@ public class LocalDateTimeline<V> implements Serializable {
 
     /** Standard join typer for å kombinere to tidsserier. */
     public enum JoinStyle {
+        /** En eller andre har verdi. */
         CROSS_JOIN {
             @Override
-            public boolean accept(Integer option) {
-                return true;
+            public boolean accept(int option) {
+                return option > 0;
             }
         },
+        /** kun venstre tidsserie. */
         DISJOINT {
             @Override
-            public boolean accept(Integer option) {
+            public boolean accept(int option) {
                 return option == LHS;
             }
         },
+        /** kun dersom begge tidsserier har verdi. */
         INNER_JOIN {
             @Override
-            public boolean accept(Integer option) {
+            public boolean accept(int option) {
                 return (option & LHS) == LHS && (option & RHS) == RHS;
             }
         },
+        /**
+         * alltid venstre tidsserie (LHS), høyre (RHS) kun med verdi dersom matcher. Combinator funksjon må hensyn ta
+         * nulls for LHS.
+         */
         LEFT_JOIN {
             @Override
-            public boolean accept(Integer option) {
+            public boolean accept(int option) {
                 return (option & LHS) == LHS;
             }
         },
+        /**
+         * alltid høyre side (RHS), venstre kun med verdi dersom matcher. Combinator funksjon må hensyn ta nulls for
+         * LHS.
+         */
         RIGHT_JOIN {
             @Override
-            public boolean accept(Integer option) {
+            public boolean accept(int option) {
                 return (option & RHS) == RHS;
             }
         };
 
-        public abstract boolean accept(Integer option);
+        public abstract boolean accept(int option);
     }
 
     /** Reduce a timeline to single output. */
@@ -100,7 +116,7 @@ public class LocalDateTimeline<V> implements Serializable {
 
     /**
      * Kombinerer løpende sammenhengende intervaller med samme verdi. Forutsetter en timeline der ingen segmenter er
-     * overlappende.
+     * overlappende (hvilket aldri skal kunne skje).
      */
     static class TimelineCompressor<V> implements Consumer<LocalDateSegment<V>> {
 
@@ -224,7 +240,7 @@ public class LocalDateTimeline<V> implements Serializable {
      * <p>
      * NB: Nåværende implementasjon er kun egnet for mindre datasett (eks. &lt; x1000 segmenter).
      * Spesielt join har høyt minneforbruk og O(n^2) ytelse. (potensiale for å forbedre algoritme til O(nlogn)) men øker
-     * kompleksitet.
+     * kompleksitet. Ytelsen er nær uavhengig av type {@link JoinStyle}.
      */
     public <T, R> LocalDateTimeline<R> combine(final LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator,
             final JoinStyle combinationStyle) {
@@ -431,8 +447,7 @@ public class LocalDateTimeline<V> implements Serializable {
             return true;
         } else {
             LocalDateInterval datoInterval = datoSegment.getLocalDateInterval();
-            if (datoInterval.getFomDato().isAfter(this.getMaxLocalDate())
-                    || datoInterval.getTomDato().isBefore(this.getMaxLocalDate())) {
+            if (!this.overlaps(datoInterval)) {
                 segments.add(datoSegment);
                 return true;
             } else {
@@ -447,6 +462,11 @@ public class LocalDateTimeline<V> implements Serializable {
             }
         }
 
+    }
+
+    public boolean overlaps(LocalDateInterval datoInterval) {
+        return datoInterval.getFomDato().isBefore(this.getMaxLocalDate().plusDays(1))
+                && datoInterval.getTomDato().isAfter(this.getMinLocalDate().minusDays(1));
     }
 
     private void addWhenOverlap(LocalDateSegment<V> datoSegment, LocalDateSegmentCombinator<V, V, V> overlapCombinator,
