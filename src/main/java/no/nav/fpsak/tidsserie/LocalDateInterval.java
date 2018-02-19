@@ -17,8 +17,10 @@ import java.util.TreeSet;
 
 import org.threeten.extra.Interval;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateIntervalDeserializer;
 import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateIntervalSerializer;
 
 /**
@@ -31,10 +33,11 @@ import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateIntervalSerial
  * (Det er relativt lett å utvide til ikke-inklusive intervaller, dersom det er behov for det.)
  */
 @JsonSerialize(using = LocalDateIntervalSerializer.class)
+@JsonDeserialize(using = LocalDateIntervalDeserializer.class)
 public class LocalDateInterval implements Comparable<LocalDateInterval>, Serializable {
 
     public static final Comparator<LocalDateInterval> ORDER_INTERVALS = Comparator.comparing(LocalDateInterval::getFomDato)
-            .thenComparing(LocalDateInterval::getTomDato);
+        .thenComparing(LocalDateInterval::getTomDato);
 
     /** bruker en verdi til å representere åpen start, forenkle en del algoritmer. */
     public static final LocalDate TIDENES_BEGYNNELSE = LocalDate.of(-4712, Month.JANUARY, 1);
@@ -75,10 +78,10 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
 
     public static Interval toInterval(LocalDate startDateInclusive, LocalDate endDate, boolean includeEnd) {
         LocalDateTime end = TIDENES_ENDE.equals(endDate) ? endDate.atStartOfDay()
-                : includeEnd ? endDate.atStartOfDay().plusDays(1) : endDate.atStartOfDay();
+            : includeEnd ? endDate.atStartOfDay().plusDays(1) : endDate.atStartOfDay();
         return Interval.of(
-                startDateInclusive.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant(),
-                end.atZone(ZoneId.systemDefault()).toInstant());
+            startDateInclusive.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant(),
+            end.atZone(ZoneId.systemDefault()).toInstant());
     }
 
     public static LocalDateInterval withPeriodAfterDate(LocalDate startDate, Period period) {
@@ -104,7 +107,7 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
 
     public boolean contains(LocalDateInterval other) {
         boolean inneholder = (getFomDato().isBefore(other.getFomDato()) || getFomDato().isEqual(other.getFomDato()))
-                && (getTomDato().isAfter(other.getTomDato()) || getTomDato().isEqual(other.getTomDato()));
+            && (getTomDato().isAfter(other.getTomDato()) || getTomDato().isEqual(other.getTomDato()));
         return inneholder;
     }
 
@@ -180,7 +183,7 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
 
     public boolean isEqual(LocalDateInterval other) {
         return Objects.equals(getFomDato(), other.getFomDato())
-                && Objects.equals(getTomDato(), other.getTomDato());
+            && Objects.equals(getTomDato(), other.getTomDato());
     }
 
     public Optional<LocalDateInterval> overlap(LocalDateInterval annen) {
@@ -255,5 +258,11 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
 
     public long totalDays() {
         return ChronoUnit.DAYS.between(fomDato, tomDato.plusDays(1));
+    }
+
+    public static LocalDateInterval parseFrom(String fom, String tom) {
+        LocalDate fomDato = fom == null || fom.isEmpty() || "-".equals(fom) ? null : LocalDate.parse(fom);
+        LocalDate tomDato = tom == null || tom.isEmpty() || "-".equals(tom) ? null : LocalDate.parse(tom);
+        return new LocalDateInterval(fomDato, tomDato);
     }
 }

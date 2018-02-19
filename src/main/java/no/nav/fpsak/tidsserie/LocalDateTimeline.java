@@ -20,8 +20,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateTimelineDeserializer;
 import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateTimelineSerializer;
 
 /**
@@ -40,6 +42,7 @@ import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateTimelineSerial
  *            Java type for verdier i tidsserien.
  */
 @JsonSerialize(using = LocalDateTimelineSerializer.class)
+@JsonDeserialize(using = LocalDateTimelineDeserializer.class)
 public class LocalDateTimeline<V> implements Serializable {
 
     private static final class SegmentSplitter<V>
@@ -58,7 +61,7 @@ public class LocalDateTimeline<V> implements Serializable {
     public interface CollectSegmentPredicate<V> {
 
         boolean test(NavigableSet<LocalDateSegment<V>> akseptertTilNå, LocalDateSegment<V> segmentUnderVurdering,
-                NavigableSet<LocalDateSegment<V>> alleForegående, NavigableSet<LocalDateSegment<V>> allePåfølgende);
+                     NavigableSet<LocalDateSegment<V>> alleForegående, NavigableSet<LocalDateSegment<V>> allePåfølgende);
 
     }
 
@@ -129,7 +132,7 @@ public class LocalDateTimeline<V> implements Serializable {
             } else {
                 LocalDateSegment<V> last = segmenter.last();
                 if (last.getLocalDateInterval().abuts(t.getLocalDateInterval())
-                        && Objects.equals(last.getValue(), t.getValue())) {
+                    && Objects.equals(last.getValue(), t.getValue())) {
                     // bytt ut og ekspander intervall for siste
                     segmenter.remove(last);
                     LocalDateInterval expandedInterval = last.getLocalDateInterval().expand(t.getLocalDateInterval());
@@ -222,7 +225,7 @@ public class LocalDateTimeline<V> implements Serializable {
                 LocalDateInterval segInterval = seg.getLocalDateInterval();
                 if (!(prevInterval.abuts(segInterval) || prevInterval.equals(segInterval))) {
                     LocalDateSegment<V> emptySegment = LocalDateSegment.emptySegment(prevInterval.getTomDato().plusDays(1),
-                            segInterval.getFomDato().minusDays(1));
+                        segInterval.getFomDato().minusDays(1));
                     evaluator.accept(emptySegment);
                 }
             }
@@ -243,7 +246,7 @@ public class LocalDateTimeline<V> implements Serializable {
      * kompleksitet. Ytelsen er nær uavhengig av type {@link JoinStyle}.
      */
     public <T, R> LocalDateTimeline<R> combine(final LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator,
-            final JoinStyle combinationStyle) {
+                                               final JoinStyle combinationStyle) {
 
         if (skipNonMatchingInnerJoin(other, combinationStyle)) {
             // rask exit dersom intersetion og ingen sjanse for overlap
@@ -252,21 +255,21 @@ public class LocalDateTimeline<V> implements Serializable {
 
         // Join alle intervaller
         final NavigableMap<LocalDateInterval, Integer> joinDatoInterval = joinLocalDateIntervals(getDatoIntervaller(),
-                other.getDatoIntervaller());
+            other.getDatoIntervaller());
 
         // filtrer ut i henhold til combinationStyle
         final List<LocalDateSegment<R>> combinedSegmenter = new ArrayList<>();
         final LocalDateTimeline<V> myTidslinje = this;
         joinDatoInterval.entrySet().stream()
-                .filter(e -> combinationStyle.accept(e.getValue()))
-                .forEachOrdered(e -> {
-                    LocalDateInterval key = e.getKey();
-                    LocalDateSegment<R> nyVerdi = combinator.combine(key, myTidslinje.getSegment(key),
-                            other.getSegment(key));
-                    if (nyVerdi != null) {
-                        combinedSegmenter.add(nyVerdi);
-                    }
-                });
+            .filter(e -> combinationStyle.accept(e.getValue()))
+            .forEachOrdered(e -> {
+                LocalDateInterval key = e.getKey();
+                LocalDateSegment<R> nyVerdi = combinator.combine(key, myTidslinje.getSegment(key),
+                    other.getSegment(key));
+                if (nyVerdi != null) {
+                    combinedSegmenter.add(nyVerdi);
+                }
+            });
 
         return new LocalDateTimeline<>(combinedSegmenter);
     }
@@ -277,7 +280,7 @@ public class LocalDateTimeline<V> implements Serializable {
      */
     public LocalDateTimeline<V> compress() {
         TimelineCompressor<V> compressor = segments.stream()
-                .collect(TimelineCompressor::new, TimelineCompressor::accept, TimelineCompressor::combine);
+            .collect(TimelineCompressor::new, TimelineCompressor::accept, TimelineCompressor::combine);
 
         return new LocalDateTimeline<>(compressor.segmenter);
     }
@@ -425,10 +428,10 @@ public class LocalDateTimeline<V> implements Serializable {
     @Override
     public String toString() {
         return getClass().getSimpleName() + "<" + //$NON-NLS-1$
-                (isEmpty() ? "0" //$NON-NLS-1$
-                        : getMinLocalDate() + ", " + getMaxLocalDate()) //$NON-NLS-1$
-                + " [" + (size() - 1) + "]" //$NON-NLS-1$ // $NON-NLS-2$
-                + "> = [" + getDatoIntervaller().stream().map(d -> String.valueOf(d)).collect(Collectors.joining(",")) + "]" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            (isEmpty() ? "0" //$NON-NLS-1$
+                : getMinLocalDate() + ", " + getMaxLocalDate()) //$NON-NLS-1$
+            + " [" + (size() - 1) + "]" //$NON-NLS-1$ // $NON-NLS-2$
+            + "> = [" + getDatoIntervaller().stream().map(d -> String.valueOf(d)).collect(Collectors.joining(",")) + "]" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ;
     }
 
@@ -447,7 +450,7 @@ public class LocalDateTimeline<V> implements Serializable {
             return true;
         } else {
             LocalDateInterval datoInterval = datoSegment.getLocalDateInterval();
-            if (!this.overlaps(datoInterval)) {
+            if (this.isTimelineOutsideInterval(datoInterval)) {
                 segments.add(datoSegment);
                 return true;
             } else {
@@ -464,25 +467,26 @@ public class LocalDateTimeline<V> implements Serializable {
 
     }
 
-    public boolean overlaps(LocalDateInterval datoInterval) {
-        return datoInterval.getFomDato().isBefore(this.getMaxLocalDate().plusDays(1))
-                && datoInterval.getTomDato().isAfter(this.getMinLocalDate().minusDays(1));
+    /** Quick check to see if interval is completely outside timeline. (avoids testing each segment) */
+    public boolean isTimelineOutsideInterval(LocalDateInterval datoInterval) {
+        return !(datoInterval.getFomDato().isBefore(this.getMaxLocalDate().plusDays(1))
+            && datoInterval.getTomDato().isAfter(this.getMinLocalDate().minusDays(1)));
     }
 
     private void addWhenOverlap(LocalDateSegment<V> datoSegment, LocalDateSegmentCombinator<V, V, V> overlapCombinator,
-            LocalDateInterval datoInterval) {
+                                LocalDateInterval datoInterval) {
         List<LocalDateSegment<V>> newSegments = new ArrayList<>();
         for (LocalDateSegment<V> segEntry : segments) {
             if (segEntry.overlapper(datoSegment)) {
                 LocalDateInterval segInterval = segEntry.getLocalDateInterval();
                 segInterval.except(datoInterval)
-                        .forEach(di -> newSegments.add(new LocalDateSegment<V>(di, segEntry.getValue())));
+                    .forEach(di -> newSegments.add(new LocalDateSegment<V>(di, segEntry.getValue())));
                 datoInterval.except(segInterval)
-                        .forEach(di -> newSegments.add(new LocalDateSegment<V>(di, datoSegment.getValue())));
+                    .forEach(di -> newSegments.add(new LocalDateSegment<V>(di, datoSegment.getValue())));
 
                 Optional<LocalDateInterval> segOverlap = segInterval.overlap(datoInterval);
                 LocalDateInterval segOverlappInterval = segOverlap.orElseThrow(() -> new IllegalArgumentException(
-                        String.format("Utvikler-feil: intervall overlapper ikke : %s - %s", segInterval, datoInterval)));
+                    String.format("Utvikler-feil: intervall overlapper ikke : %s - %s", segInterval, datoInterval)));
 
                 newSegments.add(overlapCombinator.combine(segOverlappInterval, segEntry, datoSegment));
             } else {
@@ -494,7 +498,7 @@ public class LocalDateTimeline<V> implements Serializable {
     }
 
     private NavigableSet<LocalDateInterval> combineAllUniqueIntervals(NavigableSet<LocalDateInterval> lhsIntervaller,
-            NavigableSet<LocalDateInterval> rhsIntervaller) {
+                                                                      NavigableSet<LocalDateInterval> rhsIntervaller) {
 
         if (lhsIntervaller.isEmpty()) {
             return rhsIntervaller;
@@ -517,15 +521,15 @@ public class LocalDateTimeline<V> implements Serializable {
 
                 List<LocalDateInterval> overlapped = new ArrayList<>();
                 List<LocalDateInterval> split = result.stream()
-                        .filter(i -> {
-                            boolean ret = i.overlaps(interval);
-                            if (ret) {
-                                overlapped.add(i);
-                            }
-                            return ret;
-                        })
-                        .flatMap(i -> i.splitAll(interval).stream())
-                        .collect(Collectors.toList());
+                    .filter(i -> {
+                        boolean ret = i.overlaps(interval);
+                        if (ret) {
+                            overlapped.add(i);
+                        }
+                        return ret;
+                    })
+                    .flatMap(i -> i.splitAll(interval).stream())
+                    .collect(Collectors.toList());
 
                 if (split.isEmpty()) {
                     result.add(interval);
@@ -559,7 +563,7 @@ public class LocalDateTimeline<V> implements Serializable {
     }
 
     private NavigableMap<LocalDateInterval, Integer> joinLocalDateIntervals(NavigableSet<LocalDateInterval> lhsIntervaller,
-            NavigableSet<LocalDateInterval> rhsIntervaller) {
+                                                                            NavigableSet<LocalDateInterval> rhsIntervaller) {
 
         NavigableMap<LocalDateInterval, Integer> joined = new TreeMap<>();
 
@@ -581,8 +585,8 @@ public class LocalDateTimeline<V> implements Serializable {
 
     private <T> boolean skipNonMatchingInnerJoin(final LocalDateTimeline<T> other, final JoinStyle combinationStyle) {
         return JoinStyle.INNER_JOIN == combinationStyle
-                && ((this.isEmpty() || other.isEmpty()) || !new LocalDateInterval(this.getMinLocalDate(), this.getMaxLocalDate())
-                        .overlaps(new LocalDateInterval(other.getMinLocalDate(), other.getMaxLocalDate())));
+            && ((this.isEmpty() || other.isEmpty()) || !new LocalDateInterval(this.getMinLocalDate(), this.getMaxLocalDate())
+                .overlaps(new LocalDateInterval(other.getMinLocalDate(), other.getMaxLocalDate())));
     }
 
     private void validateNonOverlapping() {
