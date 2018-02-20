@@ -391,11 +391,13 @@ public class LocalDateTimeline<V> implements Serializable {
     /**
      * Whether this timeline is continuous in the given interval.
      * 
-     * @return true if continuous and not empty.
+     * @return true if continuous and not empty for whole matchInterval
      */
     public boolean isContinuous(LocalDateInterval matchInterval) {
         LocalDateTimeline<V> intersection = this.intersection(matchInterval);
-        return !intersection.isEmpty() && intersection.isContinuous();
+        return !intersection.isEmpty() && intersection.isContinuous()
+            && Objects.equals(intersection.getMinLocalDate(), matchInterval.getFomDato())
+            && Objects.equals(intersection.getMaxLocalDate(), matchInterval.getTomDato());
     }
 
     public boolean isEmpty() {
