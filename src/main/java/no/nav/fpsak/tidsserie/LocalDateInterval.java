@@ -36,6 +36,8 @@ import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateIntervalSerial
 @JsonDeserialize(using = LocalDateIntervalDeserializer.class)
 public class LocalDateInterval implements Comparable<LocalDateInterval>, Serializable {
 
+    private static final String OPEN_END_FORMAT = "-";
+
     public static final Comparator<LocalDateInterval> ORDER_INTERVALS = Comparator.comparing(LocalDateInterval::getFomDato)
         .thenComparing(LocalDateInterval::getTomDato);
 
@@ -54,7 +56,7 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
 
     public LocalDateInterval(LocalDate fomDato, LocalDate tomDato) {
         if (fomDato != null && tomDato != null && tomDato.isBefore(fomDato)) {
-            throw new IllegalArgumentException("Til og med dato før fra og med dato: " + fomDato + ">" + tomDato);
+            throw new IllegalArgumentException("Til og med dato før fra og med dato: " + fomDato + ">" + tomDato); //$NON-NLS-1$ //$NON-NLS-2$
         }
         this.fomDato = fomDato == null ? TIDENES_BEGYNNELSE : fomDato;
         this.tomDato = tomDato == null ? TIDENES_ENDE : tomDato;
@@ -112,7 +114,15 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
     }
 
     public long days() {
-        return ChronoUnit.DAYS.between(getFomDato(), getTomDato());
+        if (!isClosedInterval()) {
+            throw new UnsupportedOperationException("Intervallet er åpent, kan ikke beregne antall dager på en trygg måte:" + this); //$NON-NLS-1$
+        }
+        return ChronoUnit.DAYS.between(getFomDato(), getTomDato().plusDays(1));
+    }
+
+    /** Returnerer true hvis intervalet er lukket (dvs. hverken åpen fom eller tom dato. */
+    public boolean isClosedInterval() {
+        return !(TIDENES_BEGYNNELSE.isEqual(getFomDato()) && TIDENES_ENDE.isEqual(getTomDato()));
     }
 
     public boolean encloses(ChronoLocalDate dato) {
@@ -149,7 +159,7 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
 
     public LocalDateInterval expand(LocalDateInterval other) {
         if (!(this.abuts(other) || this.overlaps(other))) {
-            throw new IllegalArgumentException(String.format("Intervals do not abut/overlap: %s <-> %s", this, other));
+            throw new IllegalArgumentException(String.format("Intervals do not abut/overlap: %s <-> %s", this, other)); //$NON-NLS-1$
         } else {
             return new LocalDateInterval(min(this.getFomDato(), other.getFomDato()), max(getTomDato(), other.getTomDato()));
         }
@@ -253,7 +263,7 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
     public String toString() {
         LocalDate fom = getFomDato();
         LocalDate tom = getTomDato();
-        return String.format("[%s, %s]", formatDate(fom, "-"), formatDate(tom, "-"));
+        return String.format("[%s, %s]", formatDate(fom, OPEN_END_FORMAT), formatDate(tom, OPEN_END_FORMAT)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public long totalDays() {
@@ -261,8 +271,8 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
     }
 
     public static LocalDateInterval parseFrom(String fom, String tom) {
-        LocalDate fomDato = fom == null || fom.isEmpty() || "-".equals(fom) ? null : LocalDate.parse(fom);
-        LocalDate tomDato = tom == null || tom.isEmpty() || "-".equals(tom) ? null : LocalDate.parse(tom);
+        LocalDate fomDato = fom == null || fom.isEmpty() || OPEN_END_FORMAT.equals(fom) ? null : LocalDate.parse(fom); //$NON-NLS-1$
+        LocalDate tomDato = tom == null || tom.isEmpty() || OPEN_END_FORMAT.equals(tom) ? null : LocalDate.parse(tom); //$NON-NLS-1$
         return new LocalDateInterval(fomDato, tomDato);
     }
 }
