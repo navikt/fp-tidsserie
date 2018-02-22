@@ -20,8 +20,7 @@ import org.threeten.extra.Interval;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateIntervalDeserializer;
-import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateIntervalSerializer;
+import no.nav.fpsak.tidsserie.json.LocalDateIntervalFormatters;
 
 /**
  * Denne modellerer et interval av to LocalDate. Intern representasjon benytter fom/tom istdf. fom/til da dette
@@ -32,8 +31,8 @@ import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateIntervalSerial
  * <p>
  * (Det er relativt lett å utvide til ikke-inklusive intervaller, dersom det er behov for det.)
  */
-@JsonSerialize(using = LocalDateIntervalSerializer.class)
-@JsonDeserialize(using = LocalDateIntervalDeserializer.class)
+@JsonSerialize(using = LocalDateIntervalFormatters.Serializer.class)
+@JsonDeserialize(using = LocalDateIntervalFormatters.Deserializer.class)
 public class LocalDateInterval implements Comparable<LocalDateInterval>, Serializable {
 
     private static final String OPEN_END_FORMAT = "-";
