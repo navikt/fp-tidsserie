@@ -11,6 +11,8 @@ import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import no.nav.fpsak.tidsserie.json.JsonTimelineFormatter;
+
 public class LocalDateTimelineTest {
 
     LocalDate today = LocalDate.now();
@@ -98,7 +100,7 @@ public class LocalDateTimelineTest {
     public void skal_formattere_timeline_som_json_output() throws Exception {
         LocalDateTimeline<String> timeline = basicContinuousTimeline();
 
-        CharSequence json = new LocalDateTimelineFormatter().formatJson(timeline);
+        CharSequence json = new JsonTimelineFormatter().formatJson(timeline);
 
         assertThat(json).isNotNull().contains(LocalDate.now().toString());
     }
@@ -107,7 +109,7 @@ public class LocalDateTimelineTest {
     public void skal_formattere_timeline_som_json_output_uten_verdier() throws Exception {
         LocalDateTimeline<String> timeline = basicContinuousTimeline();
 
-        CharSequence json = new LocalDateTimelineFormatter().formatJson(timeline);
+        CharSequence json = new JsonTimelineFormatter().formatJson(timeline);
 
         assertThat(json).isNotNull().contains(LocalDate.now().toString()).doesNotContain("datoInterval");
 

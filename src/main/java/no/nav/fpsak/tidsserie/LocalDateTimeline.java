@@ -23,8 +23,7 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateTimelineDeserializer;
-import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateTimelineSerializer;
+import no.nav.fpsak.tidsserie.json.LocalDateTimelineFormatters;
 
 /**
  * En tidslinje bestående av {@link LocalDateSegment}s med [fom, tom] med tilhørende verdi.
@@ -41,8 +40,8 @@ import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateTimelineSerial
  * @param <V>
  *            Java type for verdier i tidsserien.
  */
-@JsonSerialize(using = LocalDateTimelineSerializer.class)
-@JsonDeserialize(using = LocalDateTimelineDeserializer.class)
+@JsonSerialize(using = LocalDateTimelineFormatters.Serializer.class)
+@JsonDeserialize(using = LocalDateTimelineFormatters.Deserializer.class)
 public class LocalDateTimeline<V> implements Serializable {
 
     private static final class SegmentSplitter<V>

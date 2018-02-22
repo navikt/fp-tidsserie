@@ -7,11 +7,10 @@ import java.util.Objects;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateSegmentDeserializer;
-import no.nav.fpsak.tidsserie.LocalDateTimelineFormatter.LocalDateSegmentSerializer;
+import no.nav.fpsak.tidsserie.json.LocalDateSegmentFormatters;
 
-@JsonSerialize(using=LocalDateSegmentSerializer.class)
-@JsonDeserialize(using=LocalDateSegmentDeserializer.class)
+@JsonSerialize(using=LocalDateSegmentFormatters.Serializer.class)
+@JsonDeserialize(using=LocalDateSegmentFormatters.Deserializer.class)
 public class LocalDateSegment<V> implements Comparable<LocalDateSegment<V>>, Serializable {
 
     private LocalDateInterval datoInterval;
