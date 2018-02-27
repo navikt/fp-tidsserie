@@ -163,29 +163,6 @@ public class LocalDateTimelineTest {
 
     }
 
-    @Test
-    public void skal_samle_tomme_intervaller_kortere_enn_2_uker_og_med_foregående_intervall_lenger_enn_4_uker() throws Exception {
-
-        LocalDate d1 = LocalDate.now();
-        LocalDate d2 = d1.plusDays(2);
-        LocalDate d3 = d2.plusDays(2);
-        LocalDate d4 = d3.plusDays(2);
-
-        // Arrange
-        LocalDateSegment<String> ds1 = new LocalDateSegment<>(d1, d2, "hello");
-        LocalDateSegment<String> ds2 = new LocalDateSegment<>(d3, d4, "hello");
-
-        LocalDateTimeline<String> timeline = new LocalDateTimeline<>(Arrays.asList(ds1, ds2));
-        assertThat(timeline.size()).isEqualTo(2);
-
-        // Act
-        LocalDateTimeline<String> compressedTimeline = timeline.compress();
-
-        // Assert
-        assertThat(compressedTimeline).isEqualTo(timeline);
-
-    }
-
     @Ignore("Micro performance test - kun for spesielt interesserte! Kan brukes til å avsjekke forbedringer i join algoritme")
     @Test
     public void kjapp_ytelse_test() throws Exception {

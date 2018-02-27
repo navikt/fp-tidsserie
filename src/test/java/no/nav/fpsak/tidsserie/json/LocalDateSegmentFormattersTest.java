@@ -7,11 +7,8 @@ import java.util.Objects;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import no.nav.fpsak.tidsserie.LocalDateInterval;
 import no.nav.fpsak.tidsserie.LocalDateSegment;
-import no.nav.fpsak.tidsserie.json.LocalDateSegmentFormatters.Deserializer;
 
 public class LocalDateSegmentFormattersTest {
 
@@ -30,7 +27,9 @@ public class LocalDateSegmentFormattersTest {
 
         assertThat(json).contains("[ \"1970-10-15\", \"1970-12-15\", ");
 
+        @SuppressWarnings("unchecked")
         LocalDateSegment<Heisann> output = formatter.fromJson(json, LocalDateSegment.class, Heisann.class);
+        
         assertThat(output.getFom()).isEqualTo(fom);
         assertThat(output.getTom()).isEqualTo(tom);
 
@@ -56,18 +55,6 @@ public class LocalDateSegmentFormattersTest {
         LocalDateSegment<String> output = formatter.fromJson(json, LocalDateSegment.class);
 
         assertThat(output.getValue()).isEqualTo("hello");
-    }
-
-    public static class HeisannWrapper {
-        @JsonDeserialize(using=Deserializer.class, contentAs=Heisann.class)
-        private LocalDateSegment<Heisann> heisann;
-        public HeisannWrapper(LocalDateSegment<Heisann> heisann) {
-            this.heisann = heisann;
-        }
-        
-        public LocalDateSegment<Heisann> getHeisann() {
-            return heisann;
-        }
     }
 
     public static class Heisann {
