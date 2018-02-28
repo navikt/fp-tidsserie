@@ -161,7 +161,9 @@ public class LocalDateTimeline<V> implements Serializable {
 
     /**
      * Funksjon for å beregne partielle datosegmenter der input interval delvis overlapper segmentets intervall. Begge
-     * segmenter får samme verdi (tar ikke hensyn til vekting av verdi ifht. størrelse på intervall default).
+     * segmenter får samme verdi (tar ikke hensyn til vekting av verdi ifht. størrelse på intervallet).
+     * <p>
+     * Dersom et segment angir en funksjon som varierer med tid (f.eks. en linær funksjon), må en custom SegmentSplitter angis av utvikler.
      */
     private final SegmentSplitter<V> segmentSplitter = new SegmentSplitter<>();
 
@@ -185,21 +187,21 @@ public class LocalDateTimeline<V> implements Serializable {
     }
 
     /**
-     * Returnerer ny {@link LocalDateTimeline} som kun består av intervaller som passerer angitt predicate test.
+     * Returnerer ny {@link LocalDateTimeline} som kun består av intervaller som passerer angitt test.
      * <p>
      * NB: Bør sørge for at tidslinjen er 'tettest' mulig før denne kalles (dvs. hvis i tvil, bruke {@link #compress()}
      * først).
      * Hvis ikke kan f.eks. sjekker som tar hensyn til tidligere intervaller måtte sjekke om flere av disse er
      * connected.
      * 
-     * @param predicate
+     * @param test
      *            - Angitt predicate tar inn liste av tidligere aksepterte segmenter, samt nytt segment (som kan angi en
      *            tom verdi) hvis gaps inkluderes.
      * @param includeGaps
      *            - hvorvidt gaps testes for seg (vil ha null som verdi).
      */
 
-    public LocalDateTimeline<V> collect(CollectSegmentPredicate<V> predicate, boolean includeGaps) {
+    public LocalDateTimeline<V> collect(CollectSegmentPredicate<V> test, boolean includeGaps) {
 
         class CollectEvaluator implements Consumer<LocalDateSegment<V>> {
 
@@ -208,7 +210,7 @@ public class LocalDateTimeline<V> implements Serializable {
 
             @Override
             public void accept(LocalDateSegment<V> t) {
-                if (predicate.test(segmenterView, t, toSegments().headSet(t, false), toSegments().tailSet(t, false))) {
+                if (test.test(segmenterView, t, toSegments().headSet(t, false), toSegments().tailSet(t, false))) {
                     segmenter.add(t);
                 }
             }
@@ -238,9 +240,9 @@ public class LocalDateTimeline<V> implements Serializable {
     /**
      * Hjertet av en tidslinje.
      * <p>
-     * Brukes til å kombiner to timelines, med gitt combinator funksjon og JoinStyle.
+     * Brukes til å kombiner to tidslinjer, med angitt combinator funksjon og JoinStyle.
      * <p>
-     * NB: Nåværende implementasjon er kun egnet for mindre datasett (eks. &lt; x1000 segmenter).
+     * NB: Nåværende implementasjon er kun egnet for mindre datasett (feks. &lt; x1000 segmenter).
      * Spesielt join har høyt minneforbruk og O(n^2) ytelse. (potensiale for å forbedre algoritme til O(nlogn)) men øker
      * kompleksitet. Ytelsen er nær uavhengig av type {@link JoinStyle}.
      */
@@ -312,7 +314,9 @@ public class LocalDateTimeline<V> implements Serializable {
         }
         @SuppressWarnings("rawtypes")
         LocalDateTimeline other = (LocalDateTimeline) obj;
-        return Objects.equals(segments, other.segments);
+        
+        // bruk arraylist til equals slik at vi slipper forstyrrelse pga NavigableSet/compareTo
+        return Objects.equals(new ArrayList<>(segments), new ArrayList<>(other.segments));
     }
 
     /** Filter timeline based on a predicate on value. */
@@ -431,7 +435,7 @@ public class LocalDateTimeline<V> implements Serializable {
         return getClass().getSimpleName() + "<" + //$NON-NLS-1$
             (isEmpty() ? "0" //$NON-NLS-1$
                 : getMinLocalDate() + ", " + getMaxLocalDate()) //$NON-NLS-1$
-            + " [" + (size() - 1) + "]" //$NON-NLS-1$ // $NON-NLS-2$
+            + " [" + size() + "]" //$NON-NLS-1$ // $NON-NLS-2$
             + "> = [" + getDatoIntervaller().stream().map(d -> String.valueOf(d)).collect(Collectors.joining(",")) + "]" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ;
     }
