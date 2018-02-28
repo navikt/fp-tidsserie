@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
@@ -305,6 +306,7 @@ public class LocalDateTimeline<V> implements Serializable {
         return combine(other, combinator, JoinStyle.DISJOINT);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object obj) {
         if (obj == this) {
@@ -315,8 +317,8 @@ public class LocalDateTimeline<V> implements Serializable {
         @SuppressWarnings("rawtypes")
         LocalDateTimeline other = (LocalDateTimeline) obj;
         
-        // bruk arraylist til equals slik at vi slipper forstyrrelse pga NavigableSet/compareTo
-        return Objects.equals(new ArrayList<>(segments), new ArrayList<>(other.segments));
+        // bruk HashSet til equals slik at vi slipper forstyrrelse pga NavigableSet/compareTo
+        return Objects.equals(new HashSet<>(segments), new HashSet<>(other.segments));
     }
 
     /** Filter timeline based on a predicate on value. */
