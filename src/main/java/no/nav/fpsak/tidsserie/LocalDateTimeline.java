@@ -314,7 +314,9 @@ public class LocalDateTimeline<V> implements Serializable {
         }
         @SuppressWarnings("rawtypes")
         LocalDateTimeline other = (LocalDateTimeline) obj;
-        return Objects.equals(segments, other.segments);
+        
+        // bruk arraylist til equals slik at vi slipper forstyrrelse pga NavigableSet/compareTo
+        return Objects.equals(new ArrayList<>(segments), new ArrayList<>(other.segments));
     }
 
     /** Filter timeline based on a predicate on value. */
@@ -433,7 +435,7 @@ public class LocalDateTimeline<V> implements Serializable {
         return getClass().getSimpleName() + "<" + //$NON-NLS-1$
             (isEmpty() ? "0" //$NON-NLS-1$
                 : getMinLocalDate() + ", " + getMaxLocalDate()) //$NON-NLS-1$
-            + " [" + (size() - 1) + "]" //$NON-NLS-1$ // $NON-NLS-2$
+            + " [" + size() + "]" //$NON-NLS-1$ // $NON-NLS-2$
             + "> = [" + getDatoIntervaller().stream().map(d -> String.valueOf(d)).collect(Collectors.joining(",")) + "]" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ;
     }
