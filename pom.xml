@@ -5,7 +5,7 @@
 	<name>FPSAK Tidsserie</name>
 	<groupId>no.nav.fpsak.tidsserie</groupId>
 	<artifactId>fpsak-tidsserie</artifactId>
-	<version>1.7-SNAPSHOT</version>
+	<version>1.6</version>
 	<packaging>jar</packaging>
 
 	<properties>
