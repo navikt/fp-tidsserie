@@ -5,10 +5,14 @@
 	<name>FPSAK Tidsserie</name>
 	<groupId>no.nav.fpsak.tidsserie</groupId>
 	<artifactId>fpsak-tidsserie</artifactId>
-	<version>1.8-SNAPSHOT</version>
+	<version>${revision}${sha1}${changelist}</version>
 	<packaging>jar</packaging>
 
 	<properties>
+		<revision>0.0</revision>
+		<sha1></sha1>
+		<changelist>-SNAPSHOT</changelist>
+
 		<java.version>1.8</java.version>
 
 		<maven.compiler.source>${java.version}</maven.compiler.source>
@@ -133,6 +137,11 @@
 					<artifactId>maven-failsafe-plugin</artifactId>
 					<version>2.20.1</version>
 				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>flatten-maven-plugin</artifactId>
+					<version>1.0.0</version>
+				</plugin>
 
 				<plugin>
 					<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
@@ -163,6 +172,29 @@
 		</pluginManagement>
 
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<configuration>
+					<flattenMode>bom</flattenMode>
+				</configuration>
+				<executions>
+					<execution>
+						<id>flatten</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>flatten</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>flatten.clean</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -177,32 +209,6 @@
 				</executions>
 			</plugin>
 
-			<plugin>
-				<groupId>external.atlassian.jgitflow</groupId>
-				<artifactId>jgitflow-maven-plugin</artifactId>
-				<!-- Configuration inspired by http://george-stathis.com/2013/11/09/painless-maven-project-releases-with-maven-gitflow-plugin/ -->
-				<configuration>
-					<!-- Keep your maven submodules at the same version as the parent POM -->
-					<autoVersionSubmodules>true</autoVersionSubmodules>
-					<!-- Prevents deployments from dev workstations so that they can be done by a CI server -->
-					<noDeploy>true</noDeploy>
-					<!-- Makes it easy to se where a SNAPSHOT version really belongs -->
-					<enableFeatureVersions>true</enableFeatureVersions>
-					<releaseBranchVersionSuffix>RC</releaseBranchVersionSuffix>
-
-					<!-- Overriden for hotfix- and release-finish via release-profile -->
-					<allowSnapshots>true</allowSnapshots>
-					<allowUntracked>true</allowUntracked>
-
-					<!-- Pusing in-development features to origin allows all devs to see what each other are working on -->
-					<pushFeatures>true</pushFeatures>
-					<!-- This allows the CI server (e.g. Jenkins) to automatically push new releases to origin; you can then either manually deploy them or, 
-						if you are doing Continuous Deployments, auto-deploy them to prod -->
-					<pushReleases>true</pushReleases>
-					<!-- Hot Fixes should be pushed to origin as well so that any dev can pick them up -->
-					<pushHotfixes>true</pushHotfixes>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
@@ -256,21 +262,6 @@
 	</build>
 
 	<profiles>
-		<profile>
-			<id>release-profile</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>external.atlassian.jgitflow</groupId>
-						<artifactId>jgitflow-maven-plugin</artifactId>
-						<configuration>
-							<allowSnapshots>false</allowSnapshots>
-							<allowUntracked>false</allowUntracked>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
 		<profile>
 			<id>runSonar</id>
 			<activation>
