@@ -1,14 +1,14 @@
-import groovy.json.JsonSlurperClassic
 import java.security.MessageDigest;
-
 
 timestamps {
     def skipITests = '-DskipITs'
     def skipUTests = '-DskipUTs'
 	def schemaNavn = ''
+    def revision = ''
+    def version = ''
+    def sha = ''
 
     properties([disableConcurrentBuilds(), parameters([
-            booleanParam(defaultValue: true, description: '', name: 'build'),
             booleanParam(defaultValue: false, description: '', name: 'skip_UTests'),
             booleanParam(defaultValue: false, description: '', name: 'skip_ITests')])
             ])
@@ -32,37 +32,39 @@ timestamps {
                 env.PATH = "${tool 'default-maven'}/bin:${env.PATH}"
                 step([$class: 'WsCleanup'])
                 checkout scm
+
+                revision = sh(returnStdout: true, script: 'cat .mvn/version').trim()
+                commitHash = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                timestamp = new Date().format("yyyyMMddHHmmss", TimeZone.getTimeZone("UTC"))
+                sha = '_' + timestamp + '_' + commitHash
+                version = ' -Drevision="' + revision + '" -Dchangelist="" -Dsha1="' + sha + '" '
+
             }
 
-            if (params.build) {
+            stage("Build") {
+                printStage("Build")
+                info("Build: " + revision + sha)
+                configFileProvider(
+                        [configFile(fileId: 'navMavenSettingsUtenProxy', variable: 'MAVEN_SETTINGS')]) {
 
-                stage("Build") {
-
-                    printStage("Build")
-                    configFileProvider(
-                            [configFile(fileId: 'navMavenSettingsUtenProxy', variable: 'MAVEN_SETTINGS')]) {
-                        
-                        version=getMavenVersion()
-                        
-			mavenProps=" -Dfile.encoding=UTF-8 -Djava.security.egd=file:///dev/urandom -DinstallAtEnd=true -DdeployAtEnd=true "
-                        sh 'mvn -B ' + version + ' -s $MAVEN_SETTINGS ' + skipUTests + ' ' + skipITests + ' ' + mavenProps + ' clean deploy'
-                    }
-
-                    if (!skipITests) {
-                        publishHTML(target: [
-                                allowMissing         : true,
-                                alwaysLinkToLastBuild: false,
-                                keepAll              : true,
-                                reportDir            : '**/target/failsafe-reports',
-                                reportFiles          : '*.html',
-                                reportName           : "Failsafe Report"
-                        ])
-                    }
+                    println"-------------"
+                    println("Versjon: " + revision + sha)
+                    println"-------------"
+                    mavenProps=" -Dfile.encoding=UTF-8 -Djava.security.egd=file:///dev/urandom -DinstallAtEnd=true -DdeployAtEnd=true "
+                    sh 'mvn -B ' + version + ' -s $MAVEN_SETTINGS ' + skipUTests + ' ' + skipITests + ' ' + mavenProps + ' clean deploy'
                 }
 
-                info("Build")
+                if (!skipITests) {
+                    publishHTML(target: [
+                            allowMissing         : true,
+                            alwaysLinkToLastBuild: false,
+                            keepAll              : true,
+                            reportDir            : '**/target/failsafe-reports',
+                            reportFiles          : '*.html',
+                            reportName           : "Failsafe Report"
+                    ])
+                }
             }
-
 
         } catch(error) {
             emailext (
@@ -100,12 +102,4 @@ def String schema() {
 	.toString()
 	.substring(0,15)
 	.toLowerCase();
-}
-
-def String getMavenVersion(){
-    revision=sh(returnStdout: true, script: 'cat .mvn/version').trim()
-    commitHash = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
-    timestamp= new Date().format("yyyyMMddHHmmss")
-    sha= '_' + timestamp + '_' + commitHash
-    return '-Drevision="' + revision + '" -Dchangelist="" -Dsha1="' + sha + '"'
 }
