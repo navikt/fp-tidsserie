@@ -16,3 +16,4 @@ _*.sh
 dep.txt
 .mvn/maven.config
 .flattened.xml
+.flattened-pom.xml
