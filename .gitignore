@@ -15,4 +15,4 @@ _*.sh
 .externalToolBuilders
 dep.txt
 .mvn/maven.config
-.flattened-pom.xml
+.flattened.xml
