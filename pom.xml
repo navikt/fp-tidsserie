@@ -356,7 +356,25 @@
 				</plugins>
 			</build>
 		</profile>
-
+        <profile>
+            <id>iapp</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <distributionManagement>
+                <repository>
+                    <id>iapp-releases</id>
+                    <name>NAV internal Nexus</name>
+                    <url>https://repo.adeo.no/repository/maven-releases</url>
+                </repository>
+                <snapshotRepository>
+                    <id>iapp-snapshots</id>
+                    <name>NAV Snapshot Repository</name>
+                    <url>https://repo.adeo.no/repository/maven-snapshots</url>
+                    <uniqueVersion>false</uniqueVersion>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
 	</profiles>
 
 	<scm>
