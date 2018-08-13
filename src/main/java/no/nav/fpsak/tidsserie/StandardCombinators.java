@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,9 +39,19 @@ public class StandardCombinators {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static LocalDateSegment<List> allValues(LocalDateInterval dateInterval,
                                                    LocalDateSegment<List<?>> lhs, LocalDateSegment<?> rhs) {
-        List list = new ArrayList<>(lhs.getValue());
-        list.add(rhs.getValue());
-        return new LocalDateSegment<>(dateInterval, list);
+        if (lhs != null && rhs != null) {
+            List list = new ArrayList<>(lhs.getValue());
+            list.add(rhs.getValue());
+            return new LocalDateSegment<>(dateInterval, list);
+        } else if (lhs == null && rhs == null) {
+            return null;
+        } else {
+            if (lhs != null) {
+                return new LocalDateSegment<>(dateInterval, Collections.singletonList(lhs.getValue()));
+            } else {
+                return new LocalDateSegment<>(dateInterval, Collections.singletonList(rhs.getValue()));
+            }
+        }
     }
 
     /**
@@ -48,9 +59,9 @@ public class StandardCombinators {
      * noe, kun intervaller. Merk hvilket intervall som benyttes avhenger av {@link JoinStyle} og "includeGaps". Alle som passer får True.
      */
     public static LocalDateSegment<Boolean> alwaysTrueForMatch(
-                                                       LocalDateInterval dateInterval,
-                                                       @SuppressWarnings("unused") LocalDateSegment<?> lhs, // NOSONAR
-                                                       @SuppressWarnings("unused") LocalDateSegment<?> rhs // NOSONAR
+                                                               LocalDateInterval dateInterval,
+                                                               @SuppressWarnings("unused") LocalDateSegment<?> lhs, // NOSONAR
+                                                               @SuppressWarnings("unused") LocalDateSegment<?> rhs // NOSONAR
     ) {
         return new LocalDateSegment<>(dateInterval, Boolean.TRUE);
     }
@@ -59,7 +70,17 @@ public class StandardCombinators {
     @SuppressWarnings("rawtypes")
     public static <T, V> LocalDateSegment<List> bothValues(LocalDateInterval dateInterval,
                                                            LocalDateSegment<T> lhs, LocalDateSegment<V> rhs) {
-        return new LocalDateSegment<>(dateInterval, Arrays.asList(lhs.getValue(), rhs.getValue()));
+        if (lhs != null && rhs != null) {
+            return new LocalDateSegment<>(dateInterval, Arrays.asList(lhs.getValue(), rhs.getValue()));
+        } else if (lhs == null && rhs == null) {
+            return null;
+        } else {
+            if (lhs != null) {
+                return new LocalDateSegment<>(dateInterval, Collections.singletonList(lhs.getValue()));
+            } else {
+                return new LocalDateSegment<>(dateInterval, Collections.singletonList(rhs.getValue()));
+            }
+        }
     }
 
     /** Basic combinator som alltid returnerer verdi fra første (Left-Hand Side) timeline hvis finnes, ellers andre. */

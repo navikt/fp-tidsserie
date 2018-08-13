@@ -487,6 +487,13 @@ public class LocalDateTimeline<V> implements Serializable {
         return segments.isEmpty();
     }
 
+    /** Map each segment to one or more segments. Can be used to split a timeline for example by a custom function.*/
+    public <R> LocalDateTimeline<R> map(Function<LocalDateSegment<V>, List<LocalDateSegment<R>>> mapper) {
+        NavigableSet<LocalDateSegment<R>> newSegments = new TreeSet<>();
+        segments.forEach(s -> newSegments.addAll(mapper.apply(s)));
+        return new LocalDateTimeline<R>(newSegments);
+    }
+    
     /**
      * Map each value to a new value given the specified mapping function.
      */
