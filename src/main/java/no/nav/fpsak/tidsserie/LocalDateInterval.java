@@ -24,12 +24,14 @@ import no.nav.fpsak.tidsserie.json.LocalDateIntervalFormatters;
 
 /**
  * Denne modellerer et interval av to LocalDate. Intern representasjon benytter fom/tom istdf. fom/til da dette
- * er innarbeidet i de fleste modeller i Nav, og mindre forvirrende ved lesing.
+ * er innarbeidet i de fleste modeller i NAV, og mindre forvirrende ved lesing av dato intervaller.
  * <p>
  * API'et er modellert etter metoder fra java.time og threeten-extra Interval.
  * 
  * <p>
  * (Det er relativt lett å utvide til ikke-inklusive intervaller, dersom det er behov for det.)
+ * <p>
+ * Representasjonen bruker faste tidspuynkt til å representere åpne intervaller, slik at null håndtering ikke er nødvendig i {@link LocalDateTimeline}.
  */
 @JsonSerialize(using = LocalDateIntervalFormatters.Serializer.class)
 @JsonDeserialize(using = LocalDateIntervalFormatters.Deserializer.class)
@@ -170,6 +172,16 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
 
     public LocalDate getTomDato() {
         return tomDato;
+    }
+    
+    /** Hvorvidt intervallet har åpen start. */
+    public boolean isOpenStart() {
+        return TIDENES_BEGYNNELSE.isEqual(fomDato);
+    }
+    
+    /** Hvorvidt intervallet har åpen slutt. */
+    public boolean isOpenEnd() {
+        return TIDENES_ENDE.isEqual(tomDato);
     }
 
     @Override

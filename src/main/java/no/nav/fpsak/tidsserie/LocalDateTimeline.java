@@ -67,7 +67,7 @@ public class LocalDateTimeline<V> implements Serializable {
 
     /** Standard join typer for å kombinere to tidsserier. */
     public enum JoinStyle {
-        /** En eller andre har verdi. */
+        /** Ene eller andre har verdi. */
         CROSS_JOIN {
             @Override
             public boolean accept(int option) {
@@ -90,7 +90,7 @@ public class LocalDateTimeline<V> implements Serializable {
         },
         /**
          * alltid venstre tidsserie (LHS), høyre (RHS) kun med verdi dersom matcher. Combinator funksjon må hensyn ta
-         * nulls for LHS.
+         * nulls for RHS.
          */
         LEFT_JOIN {
             @Override
@@ -161,30 +161,73 @@ public class LocalDateTimeline<V> implements Serializable {
     private final NavigableSet<LocalDateSegment<V>> segments = new TreeSet<>();
 
     /**
-     * Funksjon for å beregne partielle datosegmenter der input interval delvis overlapper segmentets intervall. Begge
-     * segmenter får samme verdi (tar ikke hensyn til vekting av verdi ifht. størrelse på intervallet).
+     * Funksjon for å beregne partielle datosegmenter der input interval delvis overlapper segmentets intervall. <br>
+     * Begge
+     * segmenter får samme verdi.
      * <p>
-     * Dersom et segment angir en funksjon som varierer med tid (f.eks. en linær funksjon), må en custom SegmentSplitter angis av utvikler.
+     * Dersom et segment angir en funksjon som varierer med tid (f.eks. en linær funksjon), må en custom SegmentSplitter angis av utvikler.<br>
+     * (tar ikke hensyn til vekting av verdi ifht. størrelse på intervallet hvilket kan være aktuelt for tidsserier der segmenter representerer
+     * en funksjon av tid.
+     * (eks: <code> f(t) = a*t + b ; t0 =&lt; t &lt;= t1 </code>)
+     * <p>
+     * 
      */
-    private final SegmentSplitter<V> segmentSplitter = new SegmentSplitter<>();
+    private final SegmentSplitter<V> segmentSplitter;
 
-    public LocalDateTimeline(Collection<LocalDateSegment<V>> datoSegmenter) {
-        this(datoSegmenter, null);
+    /**
+     * Convenience constructor for å opprette timeline med kun et segment
+     * 
+     * @param fomDato - fra dato (fra-og-med)
+     * @param tomDato - til dato (til-og-med)
+     */
+    public LocalDateTimeline(LocalDate fomDato, LocalDate tomDato, V value) {
+        this(new LocalDateInterval(fomDato, tomDato), value);
     }
 
-    public LocalDateTimeline(Collection<LocalDateSegment<V>> datoSegmenter, LocalDateSegmentCombinator<V, V, V> overlapCombinator) {
+    /**
+     * Convenience contstructor for å opprette timeline med kun et segment.
+     */
+    public LocalDateTimeline(LocalDateInterval datoInterval, V value) {
+        this(Arrays.asList(new LocalDateSegment<V>(datoInterval, value)));
+    }
+
+    public LocalDateTimeline(Collection<LocalDateSegment<V>> datoSegmenter) {
+        this(datoSegmenter, null, null);
+    }
+
+    public LocalDateTimeline(Collection<LocalDateSegment<V>> datoSegmenter,
+                             SegmentSplitter<V> customSegmentSplitter) {
+        this(datoSegmenter, null, customSegmentSplitter);
+    }
+
+    /**
+     * Constructor
+     * 
+     * @param datoSegmenter - segmenter i tidsserien
+     * @param overlapCombinator - Optional combinator dersom noen segmenter overlapper. Må spesifiseres dersom det er sannsynlig kan skje.
+     */
+    public LocalDateTimeline(Collection<LocalDateSegment<V>> datoSegmenter,
+                             LocalDateSegmentCombinator<V, V, V> overlapCombinator) {
+        this(datoSegmenter, overlapCombinator, null);
+    }
+
+    /**
+     * Constructor
+     * 
+     * @param datoSegmenter - segmenter i tidsserien
+     * @param overlapCombinator - Optional combinator dersom noen segmenter overlapper. Må spesifiseres dersom det er sannsynlig kan skje.
+     * @param customSegmentSplitter - Optional splitter dersom enkelt segmenter må splittes. Default splittes interval med konstant verdi.
+     */
+    public LocalDateTimeline(Collection<LocalDateSegment<V>> datoSegmenter,
+                             LocalDateSegmentCombinator<V, V, V> overlapCombinator,
+                             SegmentSplitter<V> customSegmentSplitter) {
+
+        Objects.requireNonNull(datoSegmenter, "datoSegmenter");
         for (LocalDateSegment<V> ds : datoSegmenter) {
             add(ds, overlapCombinator);
         }
+        this.segmentSplitter = customSegmentSplitter != null ? customSegmentSplitter : new SegmentSplitter<>();
         validateNonOverlapping();
-    }
-
-    public LocalDateTimeline(LocalDate fomDato, LocalDate tomDato, V value) {
-        add(fomDato, tomDato, value);
-    }
-
-    public LocalDateTimeline(LocalDateInterval datoInterval, V value) {
-        add(datoInterval, value);
     }
 
     /**
@@ -192,8 +235,8 @@ public class LocalDateTimeline<V> implements Serializable {
      * <p>
      * NB: Bør sørge for at tidslinjen er 'tettest' mulig før denne kalles (dvs. hvis i tvil, bruke {@link #compress()}
      * først).
-     * Hvis ikke kan f.eks. sjekker som tar hensyn til tidligere intervaller måtte sjekke om flere av disse er
-     * connected.
+     * Hvis ikke det gjøers kan f.eks. sjekker som tar hensyn til tidligere intervaller måtte sjekke om flere av disse er
+     * lenket og det går utover ytelsen.
      * 
      * @param test
      *            - Angitt predicate tar inn liste av tidligere aksepterte segmenter, samt nytt segment (som kan angi en
@@ -239,9 +282,7 @@ public class LocalDateTimeline<V> implements Serializable {
     }
 
     /**
-     * Hjertet av en tidslinje.
-     * <p>
-     * Brukes til å kombiner to tidslinjer, med angitt combinator funksjon og JoinStyle.
+     * Kombinerer to tidslinjer, med angitt combinator funksjon og {@link JoinStyle}.
      * <p>
      * NB: Nåværende implementasjon er kun egnet for mindre datasett (feks. &lt; x1000 segmenter).
      * Spesielt join har høyt minneforbruk og O(n^2) ytelse. (potensiale for å forbedre algoritme til O(nlogn)) men øker
@@ -306,6 +347,12 @@ public class LocalDateTimeline<V> implements Serializable {
         return combine(other, combinator, JoinStyle.DISJOINT);
     }
 
+    /** Returnerer kun intervaller der denne timeline har verdier, men andre ikke har det. */
+    public <T> LocalDateTimeline<V> disjoint(LocalDateTimeline<T> other) {
+        final LocalDateSegmentCombinator<V, T, V> combinator = StandardCombinators::leftOnly;
+        return this.disjoint(other, combinator);
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object obj) {
@@ -316,8 +363,8 @@ public class LocalDateTimeline<V> implements Serializable {
         }
         @SuppressWarnings("rawtypes")
         LocalDateTimeline other = (LocalDateTimeline) obj;
-        
-        // bruk HashSet til equals slik at vi slipper forstyrrelse pga NavigableSet/compareTo
+
+        // bruk HashSet til equals slik at vi slipper forstyrrelse pga segments#compareTo (som ikke tar hensyn til verdi)
         return Objects.equals(new HashSet<>(segments), new HashSet<>(other.segments));
     }
 
@@ -367,8 +414,26 @@ public class LocalDateTimeline<V> implements Serializable {
         return this.intersection(intervalTimeline, StandardCombinators::leftOnly);
     }
 
+    /**
+     * Kombinerer to tidsserier, tar verdier fra begge KUN dersom begge intervaller matcher. (bruker {@link JoinStyle#INNER_JOIN}.
+     * Combinator må håndtere sammenstilling av verdi fra begge.
+     */
     public <T, R> LocalDateTimeline<R> intersection(LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator) {
         return combine(other, combinator, JoinStyle.INNER_JOIN);
+    }
+
+    /**
+     * Intersection av to tidsserier, returnerer kun dennes tidsseriens verdier ved match.
+     */
+    public <T> LocalDateTimeline<V> intersection(LocalDateTimeline<T> other) {
+        return combine(other, StandardCombinators::leftOnly, JoinStyle.INNER_JOIN);
+    }
+
+    /**
+     * Intersection av to tidsserier, returnerer ene eller andres verdier (men aldri begges). Ved match returneres dennes verdi.
+     */
+    public LocalDateTimeline<V> crossJoin(LocalDateTimeline<V> other) {
+        return combine(other, StandardCombinators::coalesceLeftHandSide, JoinStyle.CROSS_JOIN);
     }
 
     public <T> boolean intersects(LocalDateTimeline<T> other) {
@@ -376,6 +441,19 @@ public class LocalDateTimeline<V> implements Serializable {
         return !intersection.isEmpty();
     }
 
+    /**
+     * Kombinerer to tidsserier, tar verdier fra begge uansett om intervaller matcher. (bruker {@link JoinStyle#CROSS_JOIN}.
+     * Combinator må håndtere sammenstilling av verdi ved overlapp og dersom ene eller andre har verdi.
+     */
+    public <T, R> LocalDateTimeline<R> union(LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator) {
+        return combine(other, combinator, JoinStyle.CROSS_JOIN);
+    }
+
+    /**
+     * Whether this timeline is continuous and not empty for its entire interval.
+     * 
+     * @return true if continuous and not empty for whole matchInterval
+     */
     public boolean isContinuous() {
         if (segments.size() == 1) {
             return true;
@@ -409,11 +487,24 @@ public class LocalDateTimeline<V> implements Serializable {
         return segments.isEmpty();
     }
 
+    /**
+     * Map each value to a new value given the specified mapping function.
+     */
     public <R> LocalDateTimeline<R> mapValue(Function<V, R> mapper) {
         NavigableSet<LocalDateSegment<R>> newSegments = new TreeSet<>();
         segments.forEach(s -> newSegments.add(new LocalDateSegment<R>(s.getLocalDateInterval(), mapper.apply(s.getValue()))));
         return new LocalDateTimeline<>(newSegments);
     }
+
+    /**
+     * Map each value to a new value given the specified mapping function.
+     */
+    public <R> LocalDateTimeline<R> mapSegment(Function<V, R> mapper) {
+        NavigableSet<LocalDateSegment<R>> newSegments = new TreeSet<>();
+        segments.forEach(s -> newSegments.add(new LocalDateSegment<R>(s.getLocalDateInterval(), mapper.apply(s.getValue()))));
+        return new LocalDateTimeline<>(newSegments);
+    }
+      
 
     /** Reduce timeline to a given value. May be used to accumulate data such a sum of all values. */
     public <R> Optional<R> reduce(Reducer<V, R> reducer) {
@@ -424,10 +515,12 @@ public class LocalDateTimeline<V> implements Serializable {
         return Optional.ofNullable(result.get());
     }
 
+    /** Number of segments in timeline. */
     public int size() {
         return segments.size();
     }
 
+    /** Get defensive copy of all segments. */
     public NavigableSet<LocalDateSegment<V>> toSegments() {
         return Collections.unmodifiableNavigableSet(segments);
     }
@@ -441,15 +534,8 @@ public class LocalDateTimeline<V> implements Serializable {
             + "> = [" + getDatoIntervaller().stream().map(d -> String.valueOf(d)).collect(Collectors.joining(",")) + "]" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ;
     }
-
-    private boolean add(LocalDate fomDato, LocalDate tomDato, V value) {
-        return add(new LocalDateInterval(fomDato, tomDato), value);
-    }
-
-    private boolean add(LocalDateInterval datoInterval, V value) {
-        return add(new LocalDateSegment<V>(datoInterval, value), null);
-    }
-
+    
+    /** Add segment to timeline. Validate overlapping. If overlap found use given combinator to handle, or abort if not specified. */
     private boolean add(LocalDateSegment<V> datoSegment, LocalDateSegmentCombinator<V, V, V> overlapCombinator) {
         if (segments.isEmpty()) {
             // tomt sett
@@ -504,6 +590,7 @@ public class LocalDateTimeline<V> implements Serializable {
         segments.addAll(newSegments);
     }
 
+    /** Get list of unique intervals, handling overlaps if necessary. */
     private NavigableSet<LocalDateInterval> combineAllUniqueIntervals(NavigableSet<LocalDateInterval> lhsIntervaller,
                                                                       NavigableSet<LocalDateInterval> rhsIntervaller) {
 

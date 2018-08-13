@@ -8,7 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/** Standard funksjoner for kombinere verdier fra to segmenter over et gitt interval. */
+import no.nav.fpsak.tidsserie.LocalDateTimeline.JoinStyle;
+
+/** Standard (vanlige brukte) funksjoner for kombinere verdier fra to segmenter over et gitt interval. */
 public class StandardCombinators {
 
     private static final Map<String, Number> ZEROS;
@@ -42,13 +44,13 @@ public class StandardCombinators {
     }
 
     /**
-     * Basic combinator som alltid returnerer Boolean.TRUE for matching interval. Greit å bruke når verdi ikke betyr
-     * noe, kun intervaller.
+     * Basic combinator som alltid returnerer Boolean.TRUE for angitt interval. Greit å bruke når verdi ikke betyr
+     * noe, kun intervaller. Merk hvilket intervall som benyttes avhenger av {@link JoinStyle} og "includeGaps". Alle som passer får True.
      */
     public static LocalDateSegment<Boolean> alwaysTrueForMatch(
-                                                               LocalDateInterval dateInterval,
-                                                               @SuppressWarnings("unused") LocalDateSegment<?> lhs, // NOSONAR
-                                                               @SuppressWarnings("unused") LocalDateSegment<?> rhs // NOSONAR
+                                                       LocalDateInterval dateInterval,
+                                                       @SuppressWarnings("unused") LocalDateSegment<?> lhs, // NOSONAR
+                                                       @SuppressWarnings("unused") LocalDateSegment<?> rhs // NOSONAR
     ) {
         return new LocalDateSegment<>(dateInterval, Boolean.TRUE);
     }
@@ -85,6 +87,16 @@ public class StandardCombinators {
                                                        @SuppressWarnings("unused") LocalDateSegment<T> lhs, // NOSONAR
                                                        LocalDateSegment<V> rhs) {
         return new LocalDateSegment<>(dateInterval, rhs.getValue());
+    }
+
+    /**
+     * Basic combinator som tar produkt av verdi fra begge segmenter (multipliserer)
+     */
+    public static <L extends Number, R extends Number> LocalDateSegment<L> product(LocalDateInterval dateInterval,
+                                                                                   LocalDateSegment<L> lhs,
+                                                                                   LocalDateSegment<R> rhs) {
+
+        return new LocalDateSegment<>(dateInterval, product(lhs == null ? null : lhs.getValue(), rhs == null ? null : rhs.getValue()));
     }
 
     /**
@@ -147,6 +159,47 @@ public class StandardCombinators {
                 return (L) ((BigInteger) lhs).add(new BigInteger(rhs.toString()));
             default:
                 return (L) Double.valueOf(lhs.doubleValue() + rhs.doubleValue());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <L extends Number, R extends Number> L product(L lhs, R rhs) {
+        if (lhs == null && rhs == null) {
+            return null; // kan ikke bestemme return type?
+        } else {
+            // fungerer kun hvis begge har samme type
+            if (lhs == null) {
+                return productNonNull((L) ZEROS.get(rhs.getClass().getSimpleName()), rhs);
+            } else if (rhs == null) {
+                return productNonNull((L) ZEROS.get(lhs.getClass().getSimpleName()), lhs);
+            }
+        }
+
+        return productNonNull(lhs, rhs);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <L extends Number, R extends Number> L productNonNull(L lhs, R rhs) {
+        String type = lhs.getClass().getSimpleName();
+        switch (type) {
+            case "Long":
+                return (L) Long.valueOf(lhs.longValue() * rhs.longValue());
+            case "Integer":
+                return (L) Integer.valueOf(lhs.intValue() * rhs.intValue());
+            case "Double":
+                return (L) Double.valueOf(lhs.doubleValue() * rhs.doubleValue());
+            case "Float":
+                return (L) Float.valueOf(lhs.floatValue() * rhs.floatValue());
+            case "Short":
+                return (L) Short.valueOf((short) (lhs.shortValue() * rhs.shortValue()));
+            case "Byte":
+                return (L) Byte.valueOf((byte) (lhs.byteValue() * rhs.byteValue()));
+            case "BigDecimal":
+                return (L) ((BigDecimal) lhs).multiply(new BigDecimal(rhs.toString()));
+            case "BigInteger":
+                return (L) ((BigInteger) lhs).multiply(new BigInteger(rhs.toString()));
+            default:
+                return (L) Double.valueOf(lhs.doubleValue() * rhs.doubleValue());
         }
     }
 }

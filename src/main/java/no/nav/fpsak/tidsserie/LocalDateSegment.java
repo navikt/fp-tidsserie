@@ -9,6 +9,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import no.nav.fpsak.tidsserie.json.LocalDateSegmentFormatters;
 
+/**
+ * Et segment representerer en verdi for et enkelt dato intervall.
+ * 
+ * @param <V> type verdi
+ */
 @JsonSerialize(using=LocalDateSegmentFormatters.Serializer.class)
 @JsonDeserialize(using=LocalDateSegmentFormatters.Deserializer.class)
 public class LocalDateSegment<V> implements Comparable<LocalDateSegment<V>>, Serializable {
