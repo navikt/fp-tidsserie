@@ -528,9 +528,9 @@ public class LocalDateTimeline<V> implements Serializable {
         }
 
         if (forrigeSegment == null && datoInterval.getFomDato().isBefore(segEntry.getFom())) {
-            gapForan = new LocalDateInterval(datoInterval.getFomDato(), segEntry.getTom().minusDays(1));
-        } else if (forrigeSegment != null && !forrigeSegment.getTom().isEqual(segEntry.getTom().minusDays(1))) {
-            gapForan = new LocalDateInterval(forrigeSegment.getTom().plusDays(1), segEntry.getTom().minusDays(1));
+            gapForan = new LocalDateInterval(datoInterval.getFomDato(), segEntry.getFom().minusDays(1));
+        } else if (forrigeSegment != null && !forrigeSegment.getTom().isEqual(segEntry.getFom().minusDays(1))) {
+            gapForan = new LocalDateInterval(forrigeSegment.getTom().plusDays(1), segEntry.getFom().minusDays(1));
         }
 
         if (gapBak != null) {
