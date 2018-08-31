@@ -1,5 +1,6 @@
 package no.nav.fpsak.tidsserie;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
@@ -8,8 +9,6 @@ import java.util.NavigableSet;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-
-import no.nav.fpsak.tidsserie.LocalDateInterval;
 
 public class LocalDateIntervalTest {
 

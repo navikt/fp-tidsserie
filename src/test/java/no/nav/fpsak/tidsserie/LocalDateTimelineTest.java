@@ -3,9 +3,13 @@ package no.nav.fpsak.tidsserie;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.NavigableSet;
+import java.util.Set;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
@@ -161,6 +165,44 @@ public class LocalDateTimelineTest {
         // Assert
         assertThat(compressedTimeline).isEqualTo(timeline);
 
+    }
+
+    @Test
+    public void skal_håndtere_overlapp_når_flere_perioder_overlapper_med_hverandre() {
+        Set<LocalDateSegment<Boolean>> segementer = new HashSet<>();
+        LocalDateInterval førstePeriode = LocalDateInterval.withPeriodAfterDate(LocalDate.of(2015, 1, 1), Period.of(2, 0, 0));
+        LocalDateInterval andrePeriode = LocalDateInterval.withPeriodAfterDate(LocalDate.of(2015, 1, 1), Period.of(2, 9, 29));
+        LocalDateInterval sistePeriode = LocalDateInterval.withPeriodAfterDate(LocalDate.of(2016, 1, 1), Period.of(2, 3, 30));
+
+        segementer.add(new LocalDateSegment<>(førstePeriode, true));
+        segementer.add(new LocalDateSegment<>(andrePeriode, true));
+        segementer.add(new LocalDateSegment<>(sistePeriode, true));
+
+        LocalDateTimeline<Boolean> localDateTimeline = new LocalDateTimeline<>(segementer, StandardCombinators::alwaysTrueForMatch);
+
+        LocalDateInterval forventetResultat = new LocalDateInterval(førstePeriode.getFomDato(), sistePeriode.getTomDato());
+        assertThat(localDateTimeline.compress().getDatoIntervaller()).contains(forventetResultat);
+    }
+
+    @Test
+    public void skal_håndtere_overlapp_når_flere_perioder_overlapper_med_hverandre_2() {
+        Set<LocalDateSegment<Boolean>> segementer = new HashSet<>();
+        LocalDateInterval førstePeriode = LocalDateInterval.withPeriodAfterDate(LocalDate.of(2015, 2, 1), Period.of(0, 1, 1));
+        LocalDateInterval andrePeriode = LocalDateInterval.withPeriodAfterDate(LocalDate.of(2015, 4, 1), Period.of(0, 1, 1));
+        LocalDateInterval tredjePeriode = LocalDateInterval.withPeriodAfterDate(LocalDate.of(2015, 8, 1), Period.of(0, 1, 1));
+        LocalDateInterval fjerdePeriode = LocalDateInterval.withPeriodAfterDate(LocalDate.of(2015, 10, 1), Period.of(0, 1, 1));
+        LocalDateInterval sistePeriode = LocalDateInterval.withPeriodAfterDate(LocalDate.of(2014, 1, 1), Period.of(3, 1, 1));
+
+        segementer.add(new LocalDateSegment<>(førstePeriode, true));
+        segementer.add(new LocalDateSegment<>(andrePeriode, true));
+        segementer.add(new LocalDateSegment<>(tredjePeriode, true));
+        segementer.add(new LocalDateSegment<>(fjerdePeriode, true));
+        segementer.add(new LocalDateSegment<>(sistePeriode, true));
+
+        LocalDateTimeline<Boolean> localDateTimeline = new LocalDateTimeline<>(segementer, StandardCombinators::alwaysTrueForMatch);
+
+        LocalDateInterval forventetResultat = new LocalDateInterval(sistePeriode.getFomDato(), sistePeriode.getTomDato());
+        assertThat(localDateTimeline.compress().getDatoIntervaller()).contains(forventetResultat);
     }
 
     @Ignore("Micro performance test - kun for spesielt interesserte! Kan brukes til å avsjekke forbedringer i join algoritme")
