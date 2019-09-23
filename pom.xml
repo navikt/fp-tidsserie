@@ -8,13 +8,41 @@
 	<version>${revision}${sha1}${changelist}</version>
 	<packaging>jar</packaging>
 
+	<description>Library to handle timeseries data in FPSAK.</description>
+	<url>https://github.com/navikt/fp-tidsserie</url>
+
+	<scm>
+		<developerConnection>scm:git:git@github.com:navikt/fp-tidsserie.git</developerConnection>
+		<connection>scm:git:git@github.com:navikt/fp-tidsserie.git</connection>
+		<url>https://github.com/navikt/fp-tidsserie</url>
+		<tag>HEAD</tag>
+	</scm>
+
+	<organization>
+		<name>no.nav</name>
+		<url>https://github.com/navikt</url>
+	</organization>
+
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/licenses/MIT</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<organization>NAV (Arbeids- og velferdsdirektoratet) - The Norwegian Labour and Welfare Administration
+			</organization>
+			<organizationUrl>https://www.nav.no</organizationUrl>
+		</developer>
+	</developers>
+
 	<properties>
 		<revision>2.0</revision>
 		<sha1></sha1>
 		<changelist>-SNAPSHOT</changelist>
-
 		<java.version>11</java.version>
-
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -76,12 +104,6 @@
 	<build>
 		<pluginManagement>
 			<plugins>
-
-				<plugin>
-					<groupId>external.atlassian.jgitflow</groupId>
-					<artifactId>jgitflow-maven-plugin</artifactId>
-					<version>1.0-m5.1</version>
-				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
@@ -126,6 +148,12 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-release-plugin</artifactId>
 					<version>2.5.3</version>
+					<configuration>
+						<autoVersionSubmodules>true</autoVersionSubmodules>
+						<useReleaseProfile>true</useReleaseProfile>
+						<releaseProfiles>release</releaseProfiles>
+						<goals>deploy</goals>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -142,7 +170,6 @@
 					<artifactId>flatten-maven-plugin</artifactId>
 					<version>1.1.0</version>
 				</plugin>
-
 				<plugin>
 					<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself. -->
 					<groupId>org.eclipse.m2e</groupId>
@@ -258,8 +285,27 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.sonatype.plugins</groupId>
+				<artifactId>nexus-staging-maven-plugin</artifactId>
+				<version>1.6.8</version>
+				<executions>
+					<execution>
+						<id>default-deploy</id>
+						<phase>deploy</phase>
+						<!-- By default, this is the phase deploy goal will bind to -->
+						<goals>
+							<goal>deploy</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<serverId>ossrh</serverId>
+					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
+					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+				</configuration>
+			</plugin>
 		</plugins>
-
 	</build>
 
 	<profiles>
@@ -354,41 +400,82 @@
 				</plugins>
 			</build>
 		</profile>
-        <profile>
-            <id>iapp</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <distributionManagement>
-                <repository>
-                    <id>iapp-releases</id>
-                    <name>NAV internal Nexus</name>
-                    <url>https://repo.adeo.no/repository/maven-releases</url>
-                </repository>
-                <snapshotRepository>
-                    <id>iapp-snapshots</id>
-                    <name>NAV Snapshot Repository</name>
-                    <url>https://repo.adeo.no/repository/maven-snapshots</url>
-                    <uniqueVersion>false</uniqueVersion>
-                </snapshotRepository>
-            </distributionManagement>
-        </profile>
-	</profiles>
+		<profile>
+			<id>release</id>
+			<activation>
+				<property>
+					<name>release</name>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<!--create source jar-->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>2.2.1</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
 
-	<scm>
-		<connection>scm:git:ssh://git@stash.devillo.no:7999/vedfp/fpsak-tidsserie.git</connection>
-		<developerConnection>scm:git:ssh://git@stash.devillo.no:7999/vedfp/fpsak-tidsserie.git</developerConnection>
-		<url>http://stash.devillo.no/projects/VEDFP/repos/fpsak-tidsserie</url>
-	</scm>
+					<!--create empty javadoc jar-->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-jar-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>empty-javadoc-jar</id>
+								<phase>package</phase>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+								<configuration>
+									<classifier>javadoc</classifier>
+									<classesDirectory>${basedir}/src/main/javadoc</classesDirectory>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!--sign jars with pgp-->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.6</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<gpgArguments>
+								<arg>--pinentry-mode</arg>
+								<arg>loopback</arg>
+							</gpgArguments>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 	<distributionManagement>
-		<repository>
-			<id>repo.adeo.no-releases</id>
-			<url>https://repo.adeo.no/repository/maven-releases</url>
-		</repository>
 		<snapshotRepository>
-			<id>repo.adeo.no-snapshots</id>
-			<url>https://repo.adeo.no/repository/maven-snapshots</url>
-			<uniqueVersion>false</uniqueVersion>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
-	</distributionManagement>	
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
 </project>
