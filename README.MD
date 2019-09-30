@@ -37,5 +37,3 @@ Det finnes også convenience metoder å kombinere tidsserier, med færre paramet
 * disjoint: Returnerer ny tidsserie som kun inneholder intervaller som ikke finnes i angitt tidsserie parameter
 
 Hvorvidt tomme intervaller, eller andre måter å kombinere tidsseriene på kan angis ved parametere.
-
-
