@@ -5,12 +5,40 @@
 [![SonarCloud Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-tidsserie&metric=vulnerabilities)](https://sonarcloud.io/component_measures/metric/security_rating/list?id=navikt_fp-tidsserie)
 
 
-# Tidsserie håndtering for Fpsak
+# Bibliotek for Tidsserie håndtering
 Bibliotek for å forenkle håndtering av periodiserte data.  
-Dette tar vekk kompleksitet knyttet til periodisering av data og forenkler det ned til et sett med operasjoner på en tidsserie av periodiserte data.
+Dette tar vekk kompleksitet knyttet til periodisering av data og forenkler det ned til et sett med operasjoner på en tidsserie av periodiserte data.  
+F.eks. vil det automatisk holde rede på knekkpunkter, kunne kombinere tidsserier med ulike typer data, slå sammen tidsserier, eller forenkle tidsserier med påløpende perioder med like verdier.
+
+(NB: det er ikke egnet for 'timeseries analysis' eller lignende statistisk analyse av store datamengder).
+
+# Brukstilfeller
+
+## Knekke opp et sett med perioder (fom - fra-og-med, tom - til-og-med).
+Tar inn perioder (`LocalDateSegment`) og bygger en serie ut av de.  Dersom perioder overlapper vil den automatiskk knekke i flere perioder.
+
+## Kombinere tidsserier
+Flere tidsserier (`LocalDateTimeline`) kan kombineres på ulike måter:
+* Kombinere verdier
+* Aritmetiske operasjoner  (summere, negere, multiplisere, dividere) verdier  periodene
+* Boolske operassjoner (eks. finne boolsk resultat per periode)
+* Velge alle perioder fra ene tidsserien med matchende data i begge, ene eller andre tidsserie
+
+Alle operasjoner som utføres på tidsserier er abstrahert bort ved et funksjonsuttrykk som kan spesifiseres. Vanlige operasjoner er lagt til i `StandardCombinators`, deriblant:
+* `sum`
+* `product`
+* `leftOnly`, `rightOnly` - velg kun verdier fra 'venstre' eller 'høyre' tidsserie i et funksonsutrykk når perioden matcher
+* `coalesceLeftHandSide` - velg verdi fra venstre hvis fins når periode matcher, ellers velg fra høyre når ikke finnes.
+* `allValues`- returner alle verdier fra begge tidsserier fra hver periode (typisk som en liste av verdier per periode).
+* `concat` - konkatener per periode sett med strenger fra to tidsserier.
+
+Ved å implementer `LocalDateSegmentCombinator` (evt. som lambda) kan egen-definert håndtering av verdier per periode (segment) benyttes.
+
+
+[Eksempler på kombinering av tidsserier](https://github.com/navikt/fp-tidsserie/blob/master/src/test/java/no/nav/fpsak/tidsserie/LocalDateTimelineExamplesTest.java)
 
 # Implementasjon
-LocalDateTimeline er en tidsserie.  Den består av et sett med LocalDateSegment, som har fom/tom datoer (i form av et LocalDateInterval) og en verdi <V>. 
+`LocalDateTimeline` er en tidsserie.  Den består av et sett med `LocalDateSegment`, som har fom/tom datoer (i form av et `LocalDateInterval`) og en verdi <V>. 
 Fom/tom (fra-og-med, til-og-med) er valgt ettersom det er datoer som manipuleres og det er dermed mindre sjanse for forvirring om sluttdatoer er med eller ikke. 
 Åpne intervaller er modellert med min/max dato (som tilfeldigvis matcher min/max date i Oracle db) slik at null-håndtering unngås.  
 Dette er ikke synlig for bruker av API'et, men kan gi problemer med må modellere intervaller etter år 9999, eller før -4999.
