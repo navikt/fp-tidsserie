@@ -285,9 +285,11 @@
 		</plugins>
 	</build>
 
-	<repository>
-			<id>github</id>
-			<name>Github navikt Maven Packages</name>
-			<url>https://maven.pkg.github.com/navikt/fp-tidsserie</url>
-	</repository>
+	<distributionManagement>
+		<repository>
+				<id>github</id>
+				<name>Github navikt Maven Packages</name>
+				<url>https://maven.pkg.github.com/navikt/fp-tidsserie</url>
+		</repository>
+	</distributionManagement>
 </project>
