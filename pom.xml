@@ -15,7 +15,6 @@
 		<developerConnection>scm:git:git@github.com:navikt/fp-tidsserie.git</developerConnection>
 		<connection>scm:git:git@github.com:navikt/fp-tidsserie.git</connection>
 		<url>https://github.com/navikt/fp-tidsserie</url>
-		<tag>HEAD</tag>
 	</scm>
 
 	<organization>
@@ -289,7 +288,7 @@
 		<repository>
 				<id>github</id>
 				<name>Github navikt Maven Packages</name>
-				<url>https://maven.pkg.github.com/navikt/fp-tidsserie</url>
+				<url>https://maven.pkg.github.com/navikt/fp-tidsserie/</url>
 		</repository>
 	</distributionManagement>
 </project>
