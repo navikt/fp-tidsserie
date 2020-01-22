@@ -14,6 +14,16 @@ F.eks. vil det automatisk holde rede på knekkpunkter, kunne kombinere tidsserie
 
 (NB: det er ikke egnet for 'timeseries analysis' eller lignende statistisk analyse av store datamengder).
 
+# Bruk
+
+```        
+		<dependency>
+			<groupId>no.nav.fpsak.tidsserie</groupId>
+			<artifactId>fpsak-tidsserie</artifactId>
+			<version>v2.1-20200122111234-8f9c988</version>
+		</dependency>
+```
+
 # Brukstilfeller
 
 ## Knekke opp et sett med perioder (fom - fra-og-med, tom - til-og-med).
