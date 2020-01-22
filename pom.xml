@@ -49,6 +49,7 @@
 		
 		<!-- SonarCloud options -->
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+		<sonar.projectKey>navikt_fp-tidsserie</sonar.projectKey>
 		<!-- Organization and project keys are displayed in the right sidebar of the project homepage -->
 		<sonar.organization>navit</sonar.organization>
 		
