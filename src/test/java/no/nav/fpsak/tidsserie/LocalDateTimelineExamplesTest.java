@@ -45,15 +45,14 @@ public class LocalDateTimelineExamplesTest {
                 { 6, 6, "B" },
                 { 7, 9, "A" },
         }));
-        
+
         // cartesian product (cross join) med Alle Verdier: A ∪ B
         assertThat(timelineA.combine(timelineB, StandardCombinators::bothValues, JoinStyle.CROSS_JOIN)).isEqualTo(toTimeline(new Object[][] {
-                { 0, 2, Arrays.asList( "A" )},
-                { 3, 5, Arrays.asList("A", "B")},
-                { 6, 6, Arrays.asList( "B" ) },
-                { 7, 9, Arrays.asList( "A" )},
+                { 0, 2, Arrays.asList("A") },
+                { 3, 5, Arrays.asList("A", "B") },
+                { 6, 6, Arrays.asList("B") },
+                { 7, 9, Arrays.asList("A") },
         }));
-
 
         // relative complement (disjoint): A - B
         assertThat(timelineA.combine(timelineB, StandardCombinators::concat, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
@@ -78,6 +77,58 @@ public class LocalDateTimelineExamplesTest {
         assertThat(timelineA.combine(timelineB, StandardCombinators::concat, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 3, 5, "AB" },
                 { 6, 6, "B" },
+        }));
+    }
+
+    @Test
+    public void eksempel_slå_sammen_begge_verdier() throws Exception {
+        // bruker tall til å referer relative dager til today
+
+        LocalDateTimeline<String> timelineA = toTimeline(new Object[][] {
+                { 0, 5, "A" },
+                { 7, 9, "A" }
+        });
+
+        LocalDateTimeline<String> timelineB = toTimeline(new Object[][] {
+                { 3, 6, "B" }
+        });
+
+        // intersection (inner join): A ∩ B
+        assertThat(timelineA.intersection(timelineB, StandardCombinators::bothValues)).isEqualTo(toTimeline(new Object[][] {
+                { 3, 5, List.of("A", "B") },
+        }));
+
+        // cartesian product (cross join) med Alle Verdier: A ∪ B
+        assertThat(timelineA.combine(timelineB, StandardCombinators::bothValues, JoinStyle.CROSS_JOIN)).isEqualTo(toTimeline(new Object[][] {
+                { 0, 2, Arrays.asList("A") },
+                { 3, 5, Arrays.asList("A", "B") },
+                { 6, 6, Arrays.asList("B") },
+                { 7, 9, Arrays.asList("A") },
+        }));
+
+        // relative complement (disjoint): A - B
+        assertThat(timelineA.combine(timelineB, StandardCombinators::bothValues, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+                { 0, 2, List.of("A") },
+                { 7, 9, List.of("A") },
+        }));
+
+        // relative complement (disjoint): B - A
+        assertThat(timelineB.combine(timelineA, StandardCombinators::bothValues, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+                { 6, 6, List.of("B") },
+        }));
+
+        // (left join): All objects belonging to A, including intersection with B, but not non-intersecting B
+        assertThat(timelineA.combine(timelineB, StandardCombinators::bothValues, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+                { 0, 2, List.of("A") },
+                { 3, 5, List.of("A", "B") },
+                { 7, 9, List.of("A") },
+        }));
+
+        // motsatt av left join:
+        // (right join): All objects belonging to B, including intersection with A, but not non-intersecting A
+        assertThat(timelineA.combine(timelineB, StandardCombinators::bothValues, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+                { 3, 5, List.of("A", "B") },
+                { 6, 6, List.of("B") },
         }));
     }
 
@@ -170,7 +221,7 @@ public class LocalDateTimelineExamplesTest {
 
         LocalDateTimeline<String> timeline = toTimeline(new Object[][] {
                 { 0, 5, "A" }, // (har ikke A kvoter)
-                { 6, 6, "B" },  // (B bruker 1 dag av kvoten)
+                { 6, 6, "B" }, // (B bruker 1 dag av kvoten)
                 { 7, 9, "A" }, // (har ikke A kvoter)
                 { 15, 20, "B" }, // (B bruker 2 dager, kvoten deretter tom)
                 { 30, 40, "B" } // (B har ingen kvoter igjen)

@@ -77,7 +77,7 @@ public class LocalDateSegment<V> implements Comparable<LocalDateSegment<V>>, Ser
         return Objects.hash(datoInterval, value);
     }
 
-    public boolean overlapper(LocalDateSegment<V> o) {
+    public boolean overlapper(@SuppressWarnings("rawtypes") LocalDateSegment o) {
         return datoInterval.overlaps(o.datoInterval);
     }
 
