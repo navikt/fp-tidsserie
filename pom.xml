@@ -38,7 +38,7 @@
 	</developers>
 
 	<properties>
-		<revision>2.2</revision>
+		<revision>2.3</revision>
 		<sha1>-SNAPSHOT</sha1>
 		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
