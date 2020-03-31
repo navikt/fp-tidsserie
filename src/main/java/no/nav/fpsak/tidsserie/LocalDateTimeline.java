@@ -440,7 +440,23 @@ public class LocalDateTimeline<V> implements Serializable {
     public NavigableSet<LocalDateSegment<V>> toSegments() {
         return Collections.unmodifiableNavigableSet(segments);
     }
+    
+    /** Find timeline of unique segments in collection of segments that may overlap. */
+    public static<V> LocalDateTimeline<List<V>> buildGroupOverlappingSegments(Collection<LocalDateSegment<V>> segmentsWithPossibleOverlaps){
+        @SuppressWarnings({ "cast" })
+        var uniqueSegments = segmentsWithPossibleOverlaps.stream().map(s -> new LocalDateSegment<>(s.getLocalDateInterval(), (List<V>)new ArrayList<V>())).collect(Collectors.toList());
+        var uniqueIntervalTimeline = new LocalDateTimeline<>(uniqueSegments, (interval, lhs, rhs) -> new LocalDateSegment<>(interval, new ArrayList<V>()));
 
+        for(var per : uniqueIntervalTimeline.toSegments()) {
+            for(var seg: segmentsWithPossibleOverlaps) {
+                if(seg.getLocalDateInterval().overlaps(per.getLocalDateInterval())) {
+                    per.getValue().add(seg.getValue());
+                }
+            }
+        }
+        return uniqueIntervalTimeline;
+    }
+    
     @Override
     public String toString() {
         return getClass().getSimpleName() + "<" + //$NON-NLS-1$

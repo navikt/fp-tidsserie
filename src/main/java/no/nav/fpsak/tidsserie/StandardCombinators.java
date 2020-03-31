@@ -2,7 +2,6 @@ package no.nav.fpsak.tidsserie;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,28 +29,6 @@ public class StandardCombinators {
 
     private StandardCombinators() {
         // private
-    }
-
-    /**
-     * Returner liste alle verdier fra begge tidsserier angitt. Det anbefales først og fremst benyttet for tidsserier
-     * med verdier av samme type, men det er ikke et krav.
-     */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static LocalDateSegment<List> allValues(LocalDateInterval dateInterval,
-                                                   LocalDateSegment<List<?>> lhs, LocalDateSegment<?> rhs) {
-        if (lhs != null && rhs != null) {
-            List list = new ArrayList<>(lhs.getValue());
-            list.add(rhs.getValue());
-            return new LocalDateSegment<>(dateInterval, list);
-        } else if (lhs == null && rhs == null) {
-            return null;
-        } else {
-            if (lhs != null) {
-                return new LocalDateSegment<>(dateInterval, Collections.singletonList(lhs.getValue()));
-            } else {
-                return new LocalDateSegment<>(dateInterval, Collections.singletonList(rhs.getValue()));
-            }
-        }
     }
 
     /**
