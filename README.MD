@@ -3,7 +3,7 @@
 [![SonarCloud Coverage](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-tidsserie&metric=coverage)](https://sonarcloud.io/component_measures/metric/coverage/list?id=navikt_fp-tidsserie)
 [![SonarCloud Bugs](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-tidsserie&metric=bugs)](https://sonarcloud.io/component_measures/metric/reliability_rating/list?id=navikt_fp-tidsserie)
 [![SonarCloud Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-tidsserie&metric=vulnerabilities)](https://sonarcloud.io/component_measures/metric/security_rating/list?id=navikt_fp-tidsserie)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/navikt/fp-tidsserie.svg?style=for-the-badge&logo=apache-maven&label=)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/navikt/fp-tidsserie.svg?style=for-the-badge&logo=apache-maven&link=)
 ![GitHub](https://img.shields.io/github/license/navikt/fp-tidsserie)
 
 
