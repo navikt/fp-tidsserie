@@ -20,7 +20,7 @@ F.eks. vil det automatisk holde rede på knekkpunkter, kunne kombinere tidsserie
 		<dependency>
 			<groupId>no.nav.fpsak.tidsserie</groupId>
 			<artifactId>fpsak-tidsserie</artifactId>
-			<version>2.1-20200122111234-8f9c988</version>
+			<version>2.3-20200402163257-54f755e</version>
 		</dependency>
 ```
 
