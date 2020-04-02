@@ -95,7 +95,7 @@ public class LocalDateTimelineExamplesTest {
 
         // intersection (inner join): A ∩ B
         assertThat(timelineA.intersection(timelineB, StandardCombinators::bothValues)).isEqualTo(toTimeline(new Object[][] {
-                { 3, 5, List.of("A", "B") },
+                { 3, 5, List.of("A", "B") }
         }));
 
         // cartesian product (cross join) med Alle Verdier: A ∪ B
@@ -131,7 +131,96 @@ public class LocalDateTimelineExamplesTest {
                 { 6, 6, List.of("B") },
         }));
     }
+    
+    
+    @Test
+    public void eksempel_slå_sammen_med_alle_verdier() throws Exception {
+        // bruker tall til å referer relative dager til today
 
+        LocalDateTimeline<List<String>> timelineA = toTimeline(new Object[][] {
+                { 0, 5, List.of("A") },
+                { 7, 9, List.of("A") }
+        });
+
+        LocalDateTimeline<String> timelineB = toTimeline(new Object[][] {
+                { 3, 6, "B" }
+        });
+
+        // intersection (inner join): A ∩ B
+        assertThat(timelineA.intersection(timelineB, StandardCombinators::allValues)).isEqualTo(toTimeline(new Object[][] {
+                { 3, 5, List.of("A", "B") },
+        }));
+        
+        // cartesian product (cross join) med Alle Verdier: A ∪ B
+        assertThat(timelineA.combine(timelineB, StandardCombinators::allValues, JoinStyle.CROSS_JOIN)).isEqualTo(toTimeline(new Object[][] {
+                { 0, 2, Arrays.asList("A") },
+                { 3, 5, Arrays.asList("A", "B") },
+                { 6, 6, Arrays.asList("B") },
+                { 7, 9, Arrays.asList("A") },
+        }));
+
+        // relative complement (disjoint): A - B
+        assertThat(timelineA.combine(timelineB, StandardCombinators::allValues, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+                { 0, 2, List.of("A") },
+                { 7, 9, List.of("A") },
+        }));
+
+        // relative complement (disjoint): B - A
+        // -- GÅR IKKE HER DA A OG B HAR FORSKJELLIG TYPE --
+
+        // (left join): All objects belonging to A, including intersection with B, but not non-intersecting B
+        assertThat(timelineA.combine(timelineB, StandardCombinators::allValues, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+                { 0, 2, List.of("A") },
+                { 3, 5, List.of("A", "B") },
+                { 7, 9, List.of("A") },
+        }));
+
+        // motsatt av left join:
+        // (right join): All objects belonging to B, including intersection with A, but not non-intersecting A
+        assertThat(timelineA.combine(timelineB, StandardCombinators::allValues, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+                { 3, 5, List.of("A", "B") },
+                { 6, 6, List.of("B") },
+        }));
+    }
+
+    @Test
+    public void eksempel_kun_venstre_side() throws Exception {
+        // bruker tall til å referer relative dager til today
+
+        LocalDateTimeline<List<String>> timelineA = toTimeline(new Object[][] {
+                { 0, 5, List.of("A") },
+                { 7, 9, List.of("A") }
+        });
+
+        LocalDateTimeline<String> timelineB = toTimeline(new Object[][] {
+                { 3, 6, "B" }
+        });
+
+        // intersection (inner join): A ∩ B
+        assertThat(timelineA.intersection(timelineB, StandardCombinators::leftOnly)).isEqualTo(toTimeline(new Object[][] {
+                { 3, 5, List.of("A") },
+        }));
+    }
+    
+    @Test
+    public void eksempel_kun_høyre_side() throws Exception {
+        // bruker tall til å referer relative dager til today
+
+        LocalDateTimeline<List<String>> timelineA = toTimeline(new Object[][] {
+                { 0, 5, List.of("A") },
+                { 7, 9, List.of("A") }
+        });
+
+        LocalDateTimeline<String> timelineB = toTimeline(new Object[][] {
+                { 3, 6, "B" }
+        });
+
+        // intersection (inner join): A ∩ B
+        assertThat(timelineA.intersection(timelineB, StandardCombinators::rightOnly)).isEqualTo(toTimeline(new Object[][] {
+                { 3, 5, "B" },
+        }));
+    }
+    
     @Test
     public void eksempel_slå_sammen_tall_verdier() throws Exception {
         // bruker tall til å referer relative dager til today
@@ -186,6 +275,63 @@ public class LocalDateTimelineExamplesTest {
         assertThat(timelineA.combine(timelineB, StandardCombinators::sum, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 3, 5, AB },
                 { 6, 6, B },
+        }));
+    }
+    
+    @Test
+    public void eksempel_multipliser_sammen_tall_verdier() throws Exception {
+        // bruker tall til å referer relative dager til today
+
+        double A = 15d;
+        double B = 20d;
+        double AB = A * B;
+
+        LocalDateTimeline<Double> timelineA = toTimeline(new Object[][] {
+                { 0, 5, A },
+                { 7, 9, A }
+        });
+
+        LocalDateTimeline<Double> timelineB = toTimeline(new Object[][] {
+                { 3, 6, B }
+        });
+
+        // intersection (inner join): A ∩ B
+        assertThat(timelineA.intersection(timelineB, StandardCombinators::product)).isEqualTo(toTimeline(new Object[][] {
+                { 3, 5, AB },
+        }));
+
+        // cartesian product (cross join): A ∪ B
+        LocalDateTimeline<Double> timelineAXB = timelineA.combine(timelineB, StandardCombinators::product, JoinStyle.CROSS_JOIN);
+        assertThat(timelineAXB).isEqualTo(toTimeline(new Object[][] {
+                { 0, 2, 0d },
+                { 3, 5, AB },
+                { 6, 6, 0d },
+                { 7, 9, 0d },
+        }));
+
+        // relative complement (disjoint): A - B
+        assertThat(timelineA.combine(timelineB, StandardCombinators::product, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+                { 0, 2, 0d },
+                { 7, 9, 0d },
+        }));
+
+        // relative complement (disjoint): B - A
+        assertThat(timelineB.combine(timelineA, StandardCombinators::product, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+                { 6, 6, 0d },
+        }));
+
+        // (left join): All objects belonging to A, including intersection with B, but not non-intersecting B
+        assertThat(timelineA.combine(timelineB, StandardCombinators::product, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+                { 0, 2, 0d },
+                { 3, 5, AB },
+                { 7, 9, 0d },
+        }));
+
+        // motsatt av left join:
+        // (right join): All objects belonging to B, including intersection with A, but not non-intersecting A
+        assertThat(timelineA.combine(timelineB, StandardCombinators::product, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+                { 3, 5, AB },
+                { 6, 6, 0d },
         }));
     }
 

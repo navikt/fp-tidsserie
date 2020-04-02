@@ -2,6 +2,7 @@ package no.nav.fpsak.tidsserie;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +33,26 @@ public class StandardCombinators {
     }
 
     /**
+     * Returner liste alle verdier fra begge tidsserier angitt. Det anbefales først og fremst benyttet for tidsserier
+     * med verdier av samme type, men det er ikke et krav.
+     */
+    public static <V> LocalDateSegment<List<V>> allValues(LocalDateInterval dateInterval, LocalDateSegment<List<V>> lhs, LocalDateSegment<V> rhs) {
+        if (lhs != null && rhs != null) {
+            List<V> list = new ArrayList<>(lhs.getValue());
+            list.add(rhs.getValue());
+            return new LocalDateSegment<>(dateInterval, list);
+        } else if (lhs == null && rhs == null) {
+            return null;
+        } else {
+            if (lhs != null) {
+                return new LocalDateSegment<>(dateInterval, lhs.getValue());
+            } else {
+                return new LocalDateSegment<>(dateInterval, List.of(rhs.getValue()));
+            }
+        }
+    }
+
+    /**
      * Basic combinator som alltid returnerer Boolean.TRUE for angitt interval. Greit å bruke når verdi ikke betyr
      * noe, kun intervaller. Merk hvilket intervall som benyttes avhenger av {@link JoinStyle} og "includeGaps". Alle som passer får True.
      */
@@ -44,7 +65,7 @@ public class StandardCombinators {
     }
 
     /** Returner begge verdier. */
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({"rawtypes"})
     public static <T, V> LocalDateSegment<List> bothValues(LocalDateInterval dateInterval,
                                                            LocalDateSegment<T> lhs, LocalDateSegment<V> rhs) {
         if (lhs != null && rhs != null) {
