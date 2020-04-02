@@ -1,6 +1,7 @@
 package no.nav.fpsak.tidsserie;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -14,12 +15,12 @@ import no.nav.fpsak.tidsserie.json.LocalDateSegmentFormatters;
  * 
  * @param <V> type verdi
  */
-@JsonSerialize(using=LocalDateSegmentFormatters.Serializer.class)
-@JsonDeserialize(using=LocalDateSegmentFormatters.Deserializer.class)
+@JsonSerialize(using = LocalDateSegmentFormatters.Serializer.class)
+@JsonDeserialize(using = LocalDateSegmentFormatters.Deserializer.class)
 public class LocalDateSegment<V> implements Comparable<LocalDateSegment<V>>, Serializable {
 
     private LocalDateInterval datoInterval;
-    
+
     private V value;
 
     public LocalDateSegment(LocalDate fom, LocalDate tom, V value) {
@@ -52,8 +53,17 @@ public class LocalDateSegment<V> implements Comparable<LocalDateSegment<V>>, Ser
         @SuppressWarnings("rawtypes")
         LocalDateSegment other = (LocalDateSegment) obj;
         return Objects.equals(datoInterval, other.datoInterval)
-                && Objects.equals(value, other.value);
+            && equalValues(other);
 
+    }
+
+    private boolean equalValues(LocalDateSegment other) {
+        if (value instanceof BigDecimal && other.value instanceof BigDecimal) {
+            // special case
+            return ((BigDecimal) value).compareTo((BigDecimal) other.value) == 0;
+        } else {
+            return Objects.equals(value, other.value);
+        }
     }
 
     public LocalDate getFom() {
