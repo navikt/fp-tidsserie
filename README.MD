@@ -16,7 +16,6 @@ F.eks. vil det automatisk holde rede på knekkpunkter, kunne kombinere tidsserie
 (NB: det er ikke egnet for 'timeseries analysis' eller lignende statistisk analyse av store datamengder).
 
 # Bruk
-Maven Dependency:
 
 ```        
 		<dependency>
