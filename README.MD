@@ -10,6 +10,7 @@
 # Bibliotek for Tidsserie håndtering
 Bibliotek for å forenkle håndtering av periodiserte data.  
 Dette tar vekk kompleksitet knyttet til periodisering av data og forenkler det ned til et sett med operasjoner på en tidsserie av periodiserte data.  
+
 F.eks. vil det automatisk holde rede på knekkpunkter, kunne kombinere tidsserier med ulike typer data, slå sammen tidsserier, eller forenkle tidsserier med påløpende perioder med like verdier.
 
 (NB: det er ikke egnet for 'timeseries analysis' eller lignende statistisk analyse av store datamengder).
@@ -20,7 +21,7 @@ F.eks. vil det automatisk holde rede på knekkpunkter, kunne kombinere tidsserie
 		<dependency>
 			<groupId>no.nav.fpsak.tidsserie</groupId>
 			<artifactId>fpsak-tidsserie</artifactId>
-			<version>2.3-20200402163257-54f755e</version>
+			<version>2.3-20200427084950-396F346</version>
 		</dependency>
 ```
 
