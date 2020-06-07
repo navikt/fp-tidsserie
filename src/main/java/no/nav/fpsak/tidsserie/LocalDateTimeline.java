@@ -16,6 +16,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -214,8 +215,22 @@ public class LocalDateTimeline<V> implements Serializable {
      * for å 'redusere' tidslinjen ned til enkleste form før lagring etc.
      */
     public LocalDateTimeline<V> compress() {
+        var factory = new CompressorFactory<V>(Objects::equals, LocalDateSegment::new);
         TimelineCompressor<V> compressor = segments.stream()
-                .collect(TimelineCompressor::new, TimelineCompressor::accept, TimelineCompressor::combine);
+                .collect(factory::get, TimelineCompressor::accept, TimelineCompressor::combine);
+
+        return new LocalDateTimeline<>(compressor.segmenter);
+    }
+
+    /**
+     * Fikser opp tidslinjen ved å slå sammen sammenhengende intervall med "like" verider utover periode.
+     * @param e    - likhetspredikat for å sammenligne to segment som vurderes slått sammen
+     * @param c    - konstruktør som tar nytt intervall og gammel verdi og lager et nytt segment
+     */
+    public LocalDateTimeline<V> compress(BiPredicate<V, V> e, BiFunction<LocalDateInterval, V, LocalDateSegment<V>> c) {
+        var factory = new CompressorFactory<>(e, c);
+        TimelineCompressor<V> compressor = segments.stream()
+                .collect(factory::get, TimelineCompressor::accept, TimelineCompressor::combine);
 
         return new LocalDateTimeline<>(compressor.segmenter);
     }
@@ -757,6 +772,13 @@ public class LocalDateTimeline<V> implements Serializable {
     static class TimelineCompressor<V> implements Consumer<LocalDateSegment<V>> {
 
         private final NavigableSet<LocalDateSegment<V>> segmenter = new TreeSet<>();
+        private final BiPredicate<V, V> equals;
+        private final BiFunction<LocalDateInterval, V, LocalDateSegment<V>> construct;
+
+        TimelineCompressor(BiPredicate<V, V> e, BiFunction<LocalDateInterval, V, LocalDateSegment<V>> c) {
+            this.equals = e;
+            this.construct = c;
+        }
 
         @Override
         public void accept(LocalDateSegment<V> t) {
@@ -765,11 +787,11 @@ public class LocalDateTimeline<V> implements Serializable {
             } else {
                 LocalDateSegment<V> last = segmenter.last();
                 if (last.getLocalDateInterval().abuts(t.getLocalDateInterval())
-                        && Objects.equals(last.getValue(), t.getValue())) {
+                        && equals.test(last.getValue(), t.getValue())) {
                     // bytt ut og ekspander intervall for siste
                     segmenter.remove(last);
                     LocalDateInterval expandedInterval = last.getLocalDateInterval().expand(t.getLocalDateInterval());
-                    segmenter.add(new LocalDateSegment<V>(expandedInterval, last.getValue()));
+                    segmenter.add(construct.apply(expandedInterval, last.getValue()));
                 } else {
                     segmenter.add(t);
                 }
@@ -780,6 +802,20 @@ public class LocalDateTimeline<V> implements Serializable {
             throw new UnsupportedOperationException("Ikke implementert, men påkrevd av Stream#collect for parallell collect"); //$NON-NLS-1$
         }
 
+    }
+
+    static class CompressorFactory<V> {
+        private final BiPredicate<V, V> equals;
+        private final BiFunction<LocalDateInterval, V, LocalDateSegment<V>> construct;
+
+        CompressorFactory(BiPredicate<V, V> e, BiFunction<LocalDateInterval, V, LocalDateSegment<V>> c) {
+            this.equals = e;
+            this.construct = c;
+        }
+
+        TimelineCompressor<V> get() {
+            return new TimelineCompressor<>(equals, construct);
+        }
     }
 
 }
