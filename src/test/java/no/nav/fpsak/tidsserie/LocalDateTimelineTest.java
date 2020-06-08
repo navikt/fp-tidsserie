@@ -135,11 +135,11 @@ public class LocalDateTimelineTest {
         assertThat(timeline.size()).isEqualTo(2);
 
         // Act
-        LocalDateTimeline<String> compressedTimeline = timeline.compress(String::equals, (i, v) -> new LocalDateSegment<>(i, v + "*2"));
+        LocalDateTimeline<String> compressedTimeline = timeline.compress(String::equals, (i, v1,v2) -> new LocalDateSegment<>(i, v1.getValue()+"*"+v2.getValue()));
 
         // Assert
         assertThat(compressedTimeline.size()).isEqualTo(1);
-        assertThat(compressedTimeline).isEqualTo(new LocalDateTimeline<>(d1, d4, "hello*2"));
+        assertThat(compressedTimeline).isEqualTo(new LocalDateTimeline<>(d1, d4, "hello*hello"));
 
     }
 
