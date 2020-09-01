@@ -4,5 +4,5 @@ queries:
   - uses: security-and-quality
 
 path-ignore:
-  - '**/src/test/**'
+  - 'src/test/**'
  
