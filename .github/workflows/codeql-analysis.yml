@@ -39,12 +39,8 @@ jobs:
         with:
            languages: ${{ matrix.language }}
 
-    # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
-    # If this step fails, then you should remove it and run the build manually (see below)
-      - name: Autobuild
+      - name: Build
         run: |
-          make bootstrap
-          make release
           mvn clean package  -e --batch-mode --settings ./.github/.m2/settings.xml -f "pom.xml" -B -V -e -Dfindbugs.skip -Dcheckstyle.skip -Dpmd.skip=true -Denforcer.skip -Dmaven.javadoc.skip -DskipTests -Dmaven.test.skip.exec -Dlicense.skip=true -Drat.skip=true 
         env:
           GITHUB_USERNAME: x-access-token
