@@ -10,6 +10,18 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
+    
+    services:
+        postgres:
+          image: postgres:12
+          env:
+            POSTGRES_USER: ftkalkulus_unit
+            POSTGRES_PASSWORD: ftkalkulus_unit
+            POSTGRES_DB: ftkalkulus_unit
+          ports:
+            - 5433:5432
+          # needed because the postgres container does not provide a healthcheck
+          options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     strategy:
       fail-fast: false
@@ -21,17 +33,31 @@ jobs:
         # https://docs.github.com/en/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#overriding-automatic-language-detection
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         with:
           # We must fetch at least the immediate parents so that if this is
           # a pull request then we can checkout the head.
           fetch-depth: 2
 
-    # If this run was triggered by a pull request event, then checkout
-    # the head of the pull request instead of the merge commit.
+        # If this run was triggered by a pull request event, then checkout
+        # the head of the pull request instead of the merge commit.
       - run: git checkout HEAD^2
         if: ${{ github.event_name == 'pull_request' }}
+        
+      - name: Set cache key
+        run: |
+          echo "::set-env name=CACHE_KEY::$(expr $(date +%V) - 1 + 1)"
+          echo "::set-env name=PREVIOUS_CACHE_KEY::$(expr $(date +%V) - 1)"
+      - uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ env.CACHE_KEY }}
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ env.PREVIOUS_CACHE_KEY }}
+      
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 1.11
 
     # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
