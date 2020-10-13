@@ -1,6 +1,5 @@
 package no.nav.fpsak.tidsserie;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
@@ -12,6 +11,7 @@ import org.junit.rules.ExpectedException;
 
 public class LocalDateIntervalTest {
 
+    @SuppressWarnings("deprecation")
     @Rule
     public final ExpectedException expectedException = ExpectedException.none();
 

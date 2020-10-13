@@ -2,11 +2,13 @@ package no.nav.fpsak.tidsserie;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
@@ -21,6 +23,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -43,7 +46,7 @@ import no.nav.fpsak.tidsserie.json.LocalDateTimelineFormatters;
  */
 @JsonSerialize(using = LocalDateTimelineFormatters.Serializer.class)
 @JsonDeserialize(using = LocalDateTimelineFormatters.Deserializer.class)
-public class LocalDateTimeline<V> implements Serializable {
+public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSegment<V>> {
 
     @SuppressWarnings("rawtypes")
     public static final LocalDateTimeline EMPTY_TIMELINE = new LocalDateTimeline<>(Collections.emptyList());
@@ -121,7 +124,7 @@ public class LocalDateTimeline<V> implements Serializable {
         for (LocalDateSegment<V> ds : datoSegmenter) {
             add(ds, overlapCombinator);
         }
-        this.segmentSplitter = customSegmentSplitter != null ? customSegmentSplitter : new SegmentSplitter<>();
+        this.segmentSplitter = customSegmentSplitter != null ? customSegmentSplitter : new EqualValueSegmentSplitter<>();
         validateNonOverlapping();
     }
 
@@ -172,6 +175,17 @@ public class LocalDateTimeline<V> implements Serializable {
         }
         return new LocalDateTimeline<>(evaluator.segmenter);
 
+    }
+    
+    /**
+     * Kombinerer denne tidsserien med et enkelt segment (convenience function)
+     *
+     * @see #combine(LocalDateTimeline, LocalDateSegmentCombinator, JoinStyle)
+     */
+    public <T, R> LocalDateTimeline<R> combine(final LocalDateSegment<T> other,
+                                               final LocalDateSegmentCombinator<V, T, R> combinator,
+                                               final JoinStyle combinationStyle) {
+        return combine(new LocalDateTimeline<T>(List.of(other)), combinator, combinationStyle);
     }
 
     /**
@@ -236,7 +250,7 @@ public class LocalDateTimeline<V> implements Serializable {
     }
 
     /**
-     * Returnerer timeline der enten denne eller andre har verdier.
+     * Returnerer timeline der enten denne eller andre (eller begge) har verdier.
      */
     public <T, R> LocalDateTimeline<R> crossJoin(LocalDateTimeline<T> other, LocalDateSegmentCombinator<V, T, R> combinator) {
         return combine(other, combinator, JoinStyle.CROSS_JOIN);
@@ -244,11 +258,30 @@ public class LocalDateTimeline<V> implements Serializable {
 
     /**
      * Disjoint this timeline with given interval. Returns all parts of this timeline not overlapping with given
-     * interval.
+     * interval. Can be used to cut out a given interval from this timeline.  
+     * @return new timeline without given interval.
      */
     public LocalDateTimeline<V> disjoint(LocalDateInterval datoInterval) {
         LocalDateTimeline<V> intervalTimeline = new LocalDateTimeline<>(Arrays.asList(new LocalDateSegment<V>(datoInterval, null)));
         return this.disjoint(intervalTimeline, StandardCombinators::leftOnly);
+    }
+    
+    public LocalDateTimeline<V> splitAtRegular(LocalDate startDate, Period period){
+        LocalDate endDate = getMaxLocalDate();
+        
+        // nye segmenter
+        List<LocalDateSegment<V>> segmenter = new ArrayList<>();
+        
+        LocalDate dt = startDate;
+        while(!dt.isAfter(endDate)) {
+            LocalDate nextDt = dt.plus(period); 
+            // trekk 1 fra nextDt siden vi har fom/tom (ikke fom /til)
+            var nesteSegmenter = intersection(new LocalDateInterval(dt, nextDt.minusDays(1))).toSegments();
+            segmenter.addAll(nesteSegmenter);
+            dt = nextDt;
+        }
+        
+        return new LocalDateTimeline<>(segmenter);
     }
 
     /**
@@ -456,6 +489,15 @@ public class LocalDateTimeline<V> implements Serializable {
         return Collections.unmodifiableNavigableSet(segments);
     }
     
+    @Override
+    public Iterator<LocalDateSegment<V>> iterator() {
+        return toSegments().iterator();
+    }
+    
+    public Stream<LocalDateSegment<V>> stream() {
+        return segments.stream();
+    }
+
     /** Find timeline of unique segments in collection of segments that may overlap. */
     public static<V> LocalDateTimeline<List<V>> buildGroupOverlappingSegments(Collection<LocalDateSegment<V>> segmentsWithPossibleOverlaps){
         @SuppressWarnings({ "cast" })
@@ -753,8 +795,11 @@ public class LocalDateTimeline<V> implements Serializable {
         R reduce(R aggregateValue, LocalDateSegment<V> nextSegment);
     }
 
-    private static final class SegmentSplitter<V>
-            implements BiFunction<LocalDateInterval, LocalDateSegment<V>, LocalDateSegment<V>>, Serializable {
+    /** Interface for å custom funksjon for å splitte segmenter. */
+    public interface SegmentSplitter<V> extends BiFunction<LocalDateInterval, LocalDateSegment<V>, LocalDateSegment<V>>{
+    }
+    
+    private static final class EqualValueSegmentSplitter<V> implements SegmentSplitter<V>, Serializable {
         @Override
         public LocalDateSegment<V> apply(LocalDateInterval di, LocalDateSegment<V> seg) {
             if (di.equals(seg.getLocalDateInterval())) {
