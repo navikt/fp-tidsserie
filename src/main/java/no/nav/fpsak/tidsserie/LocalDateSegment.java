@@ -57,7 +57,7 @@ public class LocalDateSegment<V> implements Comparable<LocalDateSegment<V>>, Ser
 
     }
 
-    private boolean equalValues(LocalDateSegment other) {
+    private boolean equalValues(LocalDateSegment<?> other) {
         if (value instanceof BigDecimal && other.value instanceof BigDecimal) {
             // special case
             return ((BigDecimal) value).compareTo((BigDecimal) other.value) == 0;
