@@ -403,7 +403,9 @@ public class LocalDateTimelineExamplesTest {
                 toSegment("2019-12-01", "2020-12-31", "A"),
                 toSegment("2017-01-01", "2017-12-31", "B")));
 
-        var mappedTimeline = timeline.splitAtRegular(LocalDate.parse("2016-01-01"), Period.ofYears(1));
+        LocalDate startDate = LocalDate.parse("2016-01-01");
+        LocalDate endDate = timeline.getMaxLocalDate();
+        var mappedTimeline = timeline.splitAtRegular(startDate, endDate, Period.ofYears(1));
 
         var expectedTimeline = new LocalDateTimeline<>(
             List.of(
@@ -421,7 +423,9 @@ public class LocalDateTimelineExamplesTest {
             List.of(
                 toSegment("2019-12-01", "2020-01-02", "A")));
 
-        var mappedTimeline = timeline.splitAtRegular(LocalDate.parse("2019-12-01"), Period.ofDays(3));
+        LocalDate startDate = LocalDate.parse("2019-12-01");
+        LocalDate endDate = timeline.getMaxLocalDate().plusDays(1); // ta med litt ekstra
+        var mappedTimeline = timeline.splitAtRegular(startDate, endDate, Period.ofDays(3));
 
         var expectedTimeline = new LocalDateTimeline<>(
             List.of(
@@ -439,6 +443,29 @@ public class LocalDateTimelineExamplesTest {
 
         assertThat(mappedTimeline).isEqualTo(expectedTimeline);
     }
+    
+    @Test
+    public void eksempel_splitt_av_tidsserie_ved_period_week_1() throws Exception {
+
+        var timeline = new LocalDateTimeline<>(
+            List.of(
+                toSegment("2019-12-01", "2020-01-02", "A")));
+
+        LocalDate startDate = LocalDate.parse("2019-12-01");
+        LocalDate endDate = timeline.getMaxLocalDate();
+        var mappedTimeline = timeline.splitAtRegular(startDate, endDate, Period.ofWeeks(1));
+
+        var expectedTimeline = new LocalDateTimeline<>(
+            List.of(
+                toSegment("2019-12-01", "2019-12-07", "A"),
+                toSegment("2019-12-08", "2019-12-14", "A"),
+                toSegment("2019-12-15", "2019-12-21", "A"),
+                toSegment("2019-12-22", "2019-12-28", "A"),
+                toSegment("2019-12-29", "2020-01-02", "A")));
+
+        assertThat(mappedTimeline).isEqualTo(expectedTimeline);
+    }
+
 
     private static <V> LocalDateSegment<V> toSegment(String dt1, String dt2, V val) {
         return new LocalDateSegment<>(LocalDate.parse(dt1), LocalDate.parse(dt2), val);
