@@ -273,6 +273,11 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * NB: vær forsiktig dersom det er åpen intervaller (tidenes ende, {@link LocalDate#MIN}, {@link LocalDate#MAX} el.
      */
     public LocalDateTimeline<V> splitAtRegular(LocalDate startDate, LocalDate endDate, Period period) {
+        
+        if(LocalDate.MIN.equals(startDate) || LocalDate.MAX.equals(endDate) || endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException(String.format("kan ikke periodisere tidslinjen mellom angitte datoer: [%s, %s]", startDate, endDate));
+        }
+        
         // nye segmenter
         List<LocalDateSegment<V>> segmenter = new ArrayList<>();
 
