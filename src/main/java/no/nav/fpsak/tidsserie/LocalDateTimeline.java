@@ -276,8 +276,9 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         // nye segmenter
         List<LocalDateSegment<V>> segmenter = new ArrayList<>();
 
+        var maxLocalDate = getMaxLocalDate();
         LocalDate dt = startDate;
-        while (!dt.isAfter(endDate)) {
+        while (!dt.isAfter(endDate) && !dt.isAfter(maxLocalDate)) {
             LocalDate nextDt = dt.plus(period);
             // trekk 1 fra nextDt siden vi har fom/tom (ikke fom /til)
             var nesteSegmenter = intersection(new LocalDateInterval(dt, nextDt.minusDays(1))).toSegments();
