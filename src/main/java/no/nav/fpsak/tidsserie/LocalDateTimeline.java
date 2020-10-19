@@ -198,9 +198,9 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
     public <T, R> LocalDateTimeline<R> combine(final LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator,
                                                final JoinStyle combinationStyle) {
 
-        if (skipNonMatchingInnerJoin(other, combinationStyle)) {
-            // rask exit dersom intersetion og ingen sjanse for overlap
-            return new LocalDateTimeline<>(Collections.emptyList());
+        LocalDateTimeline<R> quickExit = combinationStyle.checkQuickExit(this, other);
+        if (quickExit != null) {
+            return quickExit;
         }
 
         // Join alle intervaller
@@ -273,11 +273,11 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * NB: vær forsiktig dersom det er åpen intervaller (tidenes ende, {@link LocalDate#MIN}, {@link LocalDate#MAX} el.
      */
     public LocalDateTimeline<V> splitAtRegular(LocalDate startDate, LocalDate endDate, Period period) {
-        
-        if(LocalDate.MIN.equals(startDate) || LocalDate.MAX.equals(endDate) || endDate.isBefore(startDate)) {
+
+        if (LocalDate.MIN.equals(startDate) || LocalDate.MAX.equals(endDate) || endDate.isBefore(startDate)) {
             throw new IllegalArgumentException(String.format("kan ikke periodisere tidslinjen mellom angitte datoer: [%s, %s]", startDate, endDate));
         }
-        
+
         // nye segmenter
         List<LocalDateSegment<V>> segmenter = new ArrayList<>();
 
@@ -331,12 +331,24 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         return collect((akseptert, ny, foregående, påfølgende) -> predicate.test(ny.getValue()), false);
     }
 
+    /**
+     * @deprecated use {@link #getLocalDateIntervals()}
+     */
+    @Deprecated(forRemoval = true)
     public NavigableSet<LocalDateInterval> getDatoIntervaller() {
         if (isEmpty()) {
             return Collections.emptyNavigableSet();
         }
         return segments.stream().map(s -> s.getLocalDateInterval()).collect(Collectors.toCollection(TreeSet::new));
     }
+    
+    public NavigableSet<LocalDateInterval> getLocalDateIntervals() {
+        if (isEmpty()) {
+            return Collections.emptyNavigableSet();
+        }
+        return segments.stream().map(s -> s.getLocalDateInterval()).collect(Collectors.toCollection(TreeSet::new));
+    }
+    
 
     public LocalDate getMaxLocalDate() {
         if (isEmpty()) {
@@ -393,6 +405,11 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * Intersection av to tidsserier, returnerer ene eller andres verdier (men aldri begges). Ved match returneres dennes verdi.
      */
     public LocalDateTimeline<V> crossJoin(LocalDateTimeline<V> other) {
+        if(this.isEmpty()) {
+            return other;
+        } else if(other.isEmpty()) {
+            return this;
+        }
         return combine(other, StandardCombinators::coalesceLeftHandSide, JoinStyle.CROSS_JOIN);
     }
 
@@ -578,14 +595,14 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             if (segEntry.overlapper(datoSegment)) {
                 LocalDateInterval segInterval = segEntry.getLocalDateInterval();
 
-                // håndter intervaller som eksisterer fra før, men ikke overlapper nytt
+                // handle intervals which exist but do not overlap with new
                 segInterval.except(datoInterval)
                     .forEach(di -> newSegments.add(new LocalDateSegment<>(di, segEntry.getValue())));
 
-                // håndter gap i eksisterende serie der ny har verdi
-                håndterGapIEksisterende(datoSegment, datoInterval, newSegments, segEntry);
+                // handle gap in existing series when new has a value
+                handleGapInExistingTimeline(datoSegment, datoInterval, newSegments, segEntry);
 
-                // håndter overlapp mellom eksisterende serie og ny verdi
+                // handle overlap between existing and new value
                 Optional<LocalDateInterval> segOverlap = segInterval.overlap(datoInterval);
                 LocalDateInterval segOverlappInterval = segOverlap.orElseThrow(() -> new IllegalArgumentException(
                     String.format("Utvikler-feil: intervall overlapper ikke : %s - %s", segInterval, datoInterval)));
@@ -599,7 +616,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         segments.addAll(newSegments);
     }
 
-    private void håndterGapIEksisterende(LocalDateSegment<V> datoSegment, LocalDateInterval datoInterval, List<LocalDateSegment<V>> newSegments,
+    private void handleGapInExistingTimeline(LocalDateSegment<V> datoSegment, LocalDateInterval datoInterval, List<LocalDateSegment<V>> newSegments,
                                          LocalDateSegment<V> segEntry) {
         LocalDateSegment<V> nesteSegment = segments.higher(segEntry);
         LocalDateSegment<V> forrigeSegment = segments.lower(segEntry);
@@ -717,12 +734,6 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         return joined;
     }
 
-    private <T> boolean skipNonMatchingInnerJoin(final LocalDateTimeline<T> other, final JoinStyle combinationStyle) {
-        return JoinStyle.INNER_JOIN == combinationStyle
-            && ((this.isEmpty() || other.isEmpty()) || !new LocalDateInterval(this.getMinLocalDate(), this.getMaxLocalDate())
-                .overlaps(new LocalDateInterval(other.getMinLocalDate(), other.getMaxLocalDate())));
-    }
-
     private void validateNonOverlapping() {
         LocalDateSegment<V> last = null;
         for (LocalDateSegment<V> seg : segments) {
@@ -756,6 +767,12 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             public boolean accept(int option) {
                 return option == LHS;
             }
+            
+            @SuppressWarnings("unchecked")
+            @Override
+            protected <V, T, R> LocalDateTimeline<R> checkQuickExit(LocalDateTimeline<V> lhs, LocalDateTimeline<T> rhs) {
+                return rhs.isEmpty() || lhs.isEmpty() ? (LocalDateTimeline<R>) lhs : null;
+            }
         },
         /**
          * kun dersom begge tidsserier har verdi.
@@ -764,6 +781,13 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             @Override
             public boolean accept(int option) {
                 return (option & LHS) == LHS && (option & RHS) == RHS;
+            }
+
+            @Override
+            protected <V, T, R> LocalDateTimeline<R> checkQuickExit(LocalDateTimeline<V> lhs, LocalDateTimeline<T> rhs) {
+                boolean skip = ((lhs.isEmpty() || rhs.isEmpty()) || !new LocalDateInterval(lhs.getMinLocalDate(), lhs.getMaxLocalDate())
+                    .overlaps(new LocalDateInterval(rhs.getMinLocalDate(), rhs.getMaxLocalDate())));
+                return skip ? new LocalDateTimeline<R>(Collections.emptyList()) : null;
             }
         },
         /**
@@ -775,6 +799,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             public boolean accept(int option) {
                 return (option & LHS) == LHS;
             }
+            
         },
         /**
          * alltid høyre side (RHS), venstre kun med verdi dersom matcher. Combinator funksjon må hensyn ta nulls for
@@ -788,6 +813,11 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         };
 
         public abstract boolean accept(int option);
+
+        @SuppressWarnings("unused")
+        protected <V, T, R> LocalDateTimeline<R> checkQuickExit(LocalDateTimeline<V> lhs, LocalDateTimeline<T> rhs){
+            return null;
+        }
     }
 
     /**
