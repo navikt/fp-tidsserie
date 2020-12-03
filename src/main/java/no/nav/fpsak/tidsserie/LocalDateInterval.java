@@ -2,7 +2,6 @@ package no.nav.fpsak.tidsserie;
 
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.Period;
 import java.time.ZoneId;
@@ -23,15 +22,18 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import no.nav.fpsak.tidsserie.json.LocalDateIntervalFormatters;
 
 /**
- * Denne modellerer et interval av to LocalDate. Intern representasjon benytter fom/tom istdf. fom/til da dette
- * er innarbeidet i de fleste modeller i NAV, og mindre forvirrende ved lesing av dato intervaller.
+ * Denne modellerer et interval av to LocalDate. Intern representasjon benytter
+ * fom/tom istdf. fom/til da dette er innarbeidet i de fleste modeller i NAV, og
+ * mindre forvirrende ved lesing av dato intervaller.
  * <p>
  * API'et er modellert etter metoder fra java.time og threeten-extra Interval.
- * 
+ *
  * <p>
- * (Det er relativt lett å utvide til ikke-inklusive intervaller, dersom det er behov for det.)
+ * (Det er relativt lett å utvide til ikke-inklusive intervaller, dersom det er
+ * behov for det.)
  * <p>
- * Representasjonen bruker faste tidspuynkt til å representere åpne intervaller, slik at null håndtering ikke er nødvendig i {@link LocalDateTimeline}.
+ * Representasjonen bruker faste tidspuynkt til å representere åpne intervaller,
+ * slik at null håndtering ikke er nødvendig i {@link LocalDateTimeline}.
  */
 @JsonSerialize(using = LocalDateIntervalFormatters.Serializer.class)
 @JsonDeserialize(using = LocalDateIntervalFormatters.Deserializer.class)
@@ -40,14 +42,16 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
     private static final String OPEN_END_FORMAT = "-";
 
     public static final Comparator<LocalDateInterval> ORDER_INTERVALS = Comparator.comparing(LocalDateInterval::getFomDato)
-        .thenComparing(LocalDateInterval::getTomDato);
+            .thenComparing(LocalDateInterval::getTomDato);
 
-    /** bruker en verdi til å representere åpen start, forenkle en del algoritmer. */
+    /**
+     * bruker en verdi til å representere åpen start, forenkle en del algoritmer.
+     */
     public static final LocalDate TIDENES_BEGYNNELSE = LocalDate.of(-4712, Month.JANUARY, 1);
 
     /**
-     * bruker en verdi til å representere åpent intervall, forenkler en del algoritmer. Verdien er tilsvarende max
-     * sysdate en Oracle db.
+     * bruker en verdi til å representere åpent intervall, forenkler en del
+     * algoritmer. Verdien er tilsvarende max sysdate en Oracle db.
      */
     public static final LocalDate TIDENES_ENDE = LocalDate.of(9999, Month.DECEMBER, 31);
 
@@ -80,11 +84,11 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
     }
 
     public static Interval toInterval(LocalDate startDateInclusive, LocalDate endDate, boolean includeEnd) {
-        LocalDateTime end = TIDENES_ENDE.equals(endDate) ? endDate.atStartOfDay()
-            : includeEnd ? endDate.atStartOfDay().plusDays(1) : endDate.atStartOfDay();
+        var end = TIDENES_ENDE.equals(endDate) ? endDate.atStartOfDay()
+                : includeEnd ? endDate.atStartOfDay().plusDays(1) : endDate.atStartOfDay();
         return Interval.of(
-            startDateInclusive.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant(),
-            end.atZone(ZoneId.systemDefault()).toInstant());
+                startDateInclusive.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant(),
+                end.atZone(ZoneId.systemDefault()).toInstant());
     }
 
     public static LocalDateInterval withPeriodAfterDate(LocalDate startDate, Period period) {
@@ -96,8 +100,8 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
     }
 
     /**
-     * Hvorvidt to intervaller ligger rett ved siden av hverandre (at this.tomDato == other.fomDato - 1 eller vice
-     * versa).
+     * Hvorvidt to intervaller ligger rett ved siden av hverandre (at this.tomDato
+     * == other.fomDato - 1 eller vice versa).
      */
     public boolean abuts(LocalDateInterval other) {
         return getTomDato().equals(other.getFomDato().minusDays(1)) || other.getTomDato().equals(getFomDato().minusDays(1));
@@ -110,7 +114,7 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
 
     public boolean contains(LocalDateInterval other) {
         boolean inneholder = (getFomDato().isBefore(other.getFomDato()) || getFomDato().isEqual(other.getFomDato()))
-            && (getTomDato().isAfter(other.getTomDato()) || getTomDato().isEqual(other.getTomDato()));
+                && (getTomDato().isAfter(other.getTomDato()) || getTomDato().isEqual(other.getTomDato()));
         return inneholder;
     }
 
@@ -121,7 +125,10 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
         return ChronoUnit.DAYS.between(getFomDato(), getTomDato().plusDays(1));
     }
 
-    /** Returnerer true hvis intervalet er lukket (dvs. hverken åpen fom eller tom dato. */
+    /**
+     * Returnerer true hvis intervalet er lukket (dvs. hverken åpen fom eller tom
+     * dato.
+     */
     public boolean isClosedInterval() {
         return !(TIDENES_BEGYNNELSE.isEqual(getFomDato()) && TIDENES_ENDE.isEqual(getTomDato()));
     }
@@ -138,7 +145,7 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
         if (obj == null || !(obj instanceof LocalDateInterval)) {
             return false;
         }
-        LocalDateInterval periode = (LocalDateInterval) obj;
+        var periode = (LocalDateInterval) obj;
         return isEqual(periode);
     }
 
@@ -148,7 +155,7 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
             return new TreeSet<>(Collections.singletonList(this));
         }
 
-        NavigableSet<LocalDateInterval> resultat = new TreeSet<>();
+        var resultat = new TreeSet<>();
         if (getFomDato().isBefore(annen.getFomDato())) {
             resultat.add(new LocalDateInterval(getFomDato(), min(getTomDato(), annen.getFomDato().minusDays(1))));
         }
@@ -173,12 +180,12 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
     public LocalDate getTomDato() {
         return tomDato;
     }
-    
+
     /** Hvorvidt intervallet har åpen start. */
     public boolean isOpenStart() {
         return TIDENES_BEGYNNELSE.isEqual(fomDato);
     }
-    
+
     /** Hvorvidt intervallet har åpen slutt. */
     public boolean isOpenEnd() {
         return TIDENES_ENDE.isEqual(tomDato);
@@ -189,7 +196,10 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
         return Objects.hash(getFomDato(), getTomDato());
     }
 
-    /** Hvorvidt to intervaller enten overlapper eller grenser til ('abuts') hverandre. */
+    /**
+     * Hvorvidt to intervaller enten overlapper eller grenser til ('abuts')
+     * hverandre.
+     */
     public boolean isConnected(LocalDateInterval other) {
         return overlaps(other) || abuts(other);
     }
@@ -204,7 +214,7 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
 
     public boolean isEqual(LocalDateInterval other) {
         return Objects.equals(getFomDato(), other.getFomDato())
-            && Objects.equals(getTomDato(), other.getTomDato());
+                && Objects.equals(getTomDato(), other.getTomDato());
     }
 
     public Optional<LocalDateInterval> overlap(LocalDateInterval annen) {
@@ -225,10 +235,10 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
     }
 
     /**
-     * Splitter to intervaller mot hverandre.
-     * Hvis de er like, returnerer this
+     * Splitter to intervaller mot hverandre. Hvis de er like, returnerer this
      * <p>
-     * Ellers returneres alle unike intervaller, der overlap også splittes i eget interval.
+     * Ellers returneres alle unike intervaller, der overlap også splittes i eget
+     * interval.
      * <p>
      */
     public NavigableSet<LocalDateInterval> splitAll(LocalDateInterval annen) {
@@ -244,11 +254,10 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
     }
 
     /**
-     * Splitter dette intervallet mot et annet.
-     * Hvis de er like, returnerer this
+     * Splitter dette intervallet mot et annet. Hvis de er like, returnerer this
      * <p>
-     * Ellers returneres alle unike intervaller fra this, der overlap også splittes i eget interval.
-     * Intervaller som kun er i annen returneres ikke
+     * Ellers returneres alle unike intervaller fra this, der overlap også splittes
+     * i eget interval. Intervaller som kun er i annen returneres ikke
      * <p>
      */
     public NavigableSet<LocalDateInterval> splitThisBy(LocalDateInterval annen) {
@@ -274,7 +283,8 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
     public String toString() {
         LocalDate fom = getFomDato();
         LocalDate tom = getTomDato();
-        return String.format("[%s, %s]", formatDate(fom, OPEN_END_FORMAT), formatDate(tom, OPEN_END_FORMAT)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        return String.format("[%s, %s]", formatDate(fom, OPEN_END_FORMAT), formatDate(tom, OPEN_END_FORMAT)); //$NON-NLS-1$ //$NON-NLS-2$
+                                                                                                              // //$NON-NLS-3$
     }
 
     public long totalDays() {
@@ -282,8 +292,8 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
     }
 
     public static LocalDateInterval parseFrom(String fom, String tom) {
-        LocalDate fomDato = fom == null || fom.isEmpty() || OPEN_END_FORMAT.equals(fom) ? null : LocalDate.parse(fom); //$NON-NLS-1$
-        LocalDate tomDato = tom == null || tom.isEmpty() || OPEN_END_FORMAT.equals(tom) ? null : LocalDate.parse(tom); //$NON-NLS-1$
+        LocalDate fomDato = fom == null || fom.isEmpty() || OPEN_END_FORMAT.equals(fom) ? null : LocalDate.parse(fom); // $NON-NLS-1$
+        LocalDate tomDato = tom == null || tom.isEmpty() || OPEN_END_FORMAT.equals(tom) ? null : LocalDate.parse(tom); // $NON-NLS-1$
         return new LocalDateInterval(fomDato, tomDato);
     }
 }
