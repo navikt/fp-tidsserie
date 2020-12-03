@@ -155,7 +155,7 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
             return new TreeSet<>(Collections.singletonList(this));
         }
 
-        var resultat = new TreeSet<>();
+        NavigableSet<LocalDateInterval> resultat = new TreeSet<>();
         if (getFomDato().isBefore(annen.getFomDato())) {
             resultat.add(new LocalDateInterval(getFomDato(), min(getTomDato(), annen.getFomDato().minusDays(1))));
         }
