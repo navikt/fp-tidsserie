@@ -49,4 +49,11 @@ jobs:
           release_name: Release ${{ env.MVN_VERSION }}
           draft: false
           prerelease: false
-
+    
+  release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Drafter
+        uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
