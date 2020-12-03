@@ -5,7 +5,7 @@
 	<name>FPSAK Tidsserie</name>
 	<groupId>no.nav.fpsak.tidsserie</groupId>
 	<artifactId>fpsak-tidsserie</artifactId>
-        <version>${revision}-${sha1}</version>
+        <version>${revision}</version>
 	<packaging>jar</packaging>
 
 	<description>Library to handle timeseries data in FPSAK.</description>
@@ -38,8 +38,7 @@
 	</developers>
 
 	<properties>
-		<revision>2.3</revision>
-		<sha1>-SNAPSHOT</sha1>
+		<revision>2.4.0-SNAPSHOT</revision>
 		<java.version>11</java.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
