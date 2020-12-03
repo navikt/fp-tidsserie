@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Objects;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 

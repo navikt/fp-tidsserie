@@ -1,19 +1,14 @@
 package no.nav.fpsak.tidsserie;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
 import java.util.NavigableSet;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 public class LocalDateIntervalTest {
-
-    @SuppressWarnings("deprecation")
-    @Rule
-    public final ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void skal_overlappe() throws Exception {
@@ -194,8 +189,7 @@ public class LocalDateIntervalTest {
 
     @Test
     public void skal_kaste_exception_når_forsøker_expanded_interval_som_ikke_er_abut() throws Exception {
-        expectedException.expect(IllegalArgumentException.class);
-        
+
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(3);
         LocalDate d3 = d2.plusDays(2);
@@ -203,13 +197,12 @@ public class LocalDateIntervalTest {
         LocalDateInterval int1 = new LocalDateInterval(d1, d2);
         LocalDateInterval int2 = new LocalDateInterval(d3, d4);
 
-        int1.expand(int2);
+        assertThrows(IllegalArgumentException.class, () -> int1.expand(int2));
     }
-    
 
     @Test
     public void skal_expande_intervall_når_de_overlapper() throws Exception {
-        
+
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(3);
         LocalDate d3 = d1.plusDays(2);
