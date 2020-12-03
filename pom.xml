@@ -5,7 +5,7 @@
 	<name>FPSAK Tidsserie</name>
 	<groupId>no.nav.fpsak.tidsserie</groupId>
 	<artifactId>fpsak-tidsserie</artifactId>
-        <version>2.4.0</version>
+        <version>2.4.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<description>Library to handle timeseries data in FPSAK.</description>
@@ -15,7 +15,7 @@
 		<developerConnection>scm:git:git@github.com:navikt/fp-tidsserie.git</developerConnection>
 		<connection>scm:git:git@github.com:navikt/fp-tidsserie.git</connection>
 		<url>https://github.com/navikt/fp-tidsserie</url>
-	  <tag>fpsak-tidsserie-2.4.0</tag>
+	  <tag>HEAD</tag>
   </scm>
 
 	<organization>
