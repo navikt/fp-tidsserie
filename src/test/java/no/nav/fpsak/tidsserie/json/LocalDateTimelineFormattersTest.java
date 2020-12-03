@@ -37,7 +37,7 @@ public class LocalDateTimelineFormattersTest {
 
         assertThat(output.timeline.toSegments().first()).isEqualTo(seg1);
     }
-    
+
     @SuppressWarnings("unchecked")
     @Test
     public void serialiser_deserialiser_primitiv_Long_LocalDateTimline() throws Exception {
@@ -54,7 +54,7 @@ public class LocalDateTimelineFormattersTest {
 
         assertThat(output.toSegments().first()).isEqualTo(seg1);
     }
-    
+
     @SuppressWarnings("unchecked")
     @Test
     public void serialiser_deserialiser_BigDecimal_LocalDateTimline() throws Exception {
@@ -71,8 +71,7 @@ public class LocalDateTimelineFormattersTest {
 
         assertThat(output.toSegments().first()).isEqualTo(seg1);
     }
-    
-    
+
     @SuppressWarnings("unchecked")
     @Test
     public void serialiser_deserialiser_String_LocalDateTimline() throws Exception {
@@ -89,7 +88,7 @@ public class LocalDateTimelineFormattersTest {
 
         assertThat(output.toSegments().first()).isEqualTo(seg1);
     }
-    
+
     @SuppressWarnings("unchecked")
     @Test
     public void serialiser_deserialiser_LocalDateTimline() throws Exception {
@@ -129,13 +128,14 @@ public class LocalDateTimelineFormattersTest {
             return Objects.hash(timeline);
         }
     }
-    
+
     public static class HeisannWrapper {
         private LocalDateSegment<Heisann> heisann;
+
         public HeisannWrapper(LocalDateSegment<Heisann> heisann) {
             this.heisann = heisann;
         }
-        
+
         public LocalDateSegment<Heisann> getHeisann() {
             return heisann;
         }
@@ -149,7 +149,7 @@ public class LocalDateTimelineFormattersTest {
         public boolean equals(Object obj) {
             Heisann hei = (Heisann) obj;
             return Objects.equals(hello, hei.hello)
-                && Objects.equals(bye, hei.bye);
+                    && Objects.equals(bye, hei.bye);
         }
 
         @Override

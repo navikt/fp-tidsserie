@@ -66,7 +66,8 @@ public class LocalDateTimelineExamplesTest {
                 { 6, 6, "B" },
         }));
 
-        // (left join): All objects belonging to A, including intersection with B, but not non-intersecting B
+        // (left join): All objects belonging to A, including intersection with B, but
+        // not non-intersecting B
         assertThat(timelineA.combine(timelineB, StandardCombinators::concat, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, "A" },
                 { 3, 5, "AB" },
@@ -74,7 +75,8 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // motsatt av left join:
-        // (right join): All objects belonging to B, including intersection with A, but not non-intersecting A
+        // (right join): All objects belonging to B, including intersection with A, but
+        // not non-intersecting A
         assertThat(timelineA.combine(timelineB, StandardCombinators::concat, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 3, 5, "AB" },
                 { 6, 6, "B" },
@@ -118,7 +120,8 @@ public class LocalDateTimelineExamplesTest {
                 { 6, 6, List.of("B") },
         }));
 
-        // (left join): All objects belonging to A, including intersection with B, but not non-intersecting B
+        // (left join): All objects belonging to A, including intersection with B, but
+        // not non-intersecting B
         assertThat(timelineA.combine(timelineB, StandardCombinators::bothValues, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, List.of("A") },
                 { 3, 5, List.of("A", "B") },
@@ -126,7 +129,8 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // motsatt av left join:
-        // (right join): All objects belonging to B, including intersection with A, but not non-intersecting A
+        // (right join): All objects belonging to B, including intersection with A, but
+        // not non-intersecting A
         assertThat(timelineA.combine(timelineB, StandardCombinators::bothValues, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 3, 5, List.of("A", "B") },
                 { 6, 6, List.of("B") },
@@ -168,7 +172,8 @@ public class LocalDateTimelineExamplesTest {
         // relative complement (disjoint): B - A
         // -- GÅR IKKE HER DA A OG B HAR FORSKJELLIG TYPE --
 
-        // (left join): All objects belonging to A, including intersection with B, but not non-intersecting B
+        // (left join): All objects belonging to A, including intersection with B, but
+        // not non-intersecting B
         assertThat(timelineA.combine(timelineB, StandardCombinators::allValues, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, List.of("A") },
                 { 3, 5, List.of("A", "B") },
@@ -176,7 +181,8 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // motsatt av left join:
-        // (right join): All objects belonging to B, including intersection with A, but not non-intersecting A
+        // (right join): All objects belonging to B, including intersection with A, but
+        // not non-intersecting A
         assertThat(timelineA.combine(timelineB, StandardCombinators::allValues, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 3, 5, List.of("A", "B") },
                 { 6, 6, List.of("B") },
@@ -263,7 +269,8 @@ public class LocalDateTimelineExamplesTest {
                 { 6, 6, B },
         }));
 
-        // (left join): All objects belonging to A, including intersection with B, but not non-intersecting B
+        // (left join): All objects belonging to A, including intersection with B, but
+        // not non-intersecting B
         assertThat(timelineA.combine(timelineB, StandardCombinators::sum, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, A },
                 { 3, 5, AB },
@@ -271,7 +278,8 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // motsatt av left join:
-        // (right join): All objects belonging to B, including intersection with A, but not non-intersecting A
+        // (right join): All objects belonging to B, including intersection with A, but
+        // not non-intersecting A
         assertThat(timelineA.combine(timelineB, StandardCombinators::sum, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 3, 5, AB },
                 { 6, 6, B },
@@ -320,7 +328,8 @@ public class LocalDateTimelineExamplesTest {
                 { 6, 6, 0d },
         }));
 
-        // (left join): All objects belonging to A, including intersection with B, but not non-intersecting B
+        // (left join): All objects belonging to A, including intersection with B, but
+        // not non-intersecting B
         assertThat(timelineA.combine(timelineB, StandardCombinators::product, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, 0d },
                 { 3, 5, AB },
@@ -328,7 +337,8 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // motsatt av left join:
-        // (right join): All objects belonging to B, including intersection with A, but not non-intersecting A
+        // (right join): All objects belonging to B, including intersection with A, but
+        // not non-intersecting A
         assertThat(timelineA.combine(timelineB, StandardCombinators::product, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 3, 5, AB },
                 { 6, 6, 0d },
@@ -351,13 +361,14 @@ public class LocalDateTimelineExamplesTest {
                 List<LocalDateSegment<V>> result;
 
                 Long kvote = kvoter.get(seg.getValue());
-                if (kvote != null && !Objects.equals(kvote, 0L)) {
+                if ((kvote != null) && !Objects.equals(kvote, 0L)) {
                     LocalDateInterval intervall = seg.getLocalDateInterval();
                     long nyKvote = Math.max(0, kvote - intervall.days());
                     result = Arrays.asList(new LocalDateSegment<>(seg.getFom(), seg.getFom().plusDays(kvote - nyKvote - 1), seg.getValue()));
                     kvoter.put(seg.getValue(), nyKvote);
                 } else {
-                    // vi er strenge her, har vi ingen kvote eller kvote==0 får du ingenting tilbake.
+                    // vi er strenge her, har vi ingen kvote eller kvote==0 får du ingenting
+                    // tilbake.
                     result = Collections.emptyList();
                 }
                 return result;
@@ -390,7 +401,7 @@ public class LocalDateTimelineExamplesTest {
         List<LocalDateSegment<V>> segments = Arrays.stream(data).map(arr -> {
             return new LocalDateSegment<>(today.plusDays((int) arr[0]), today.plusDays((int) arr[1]), (V) arr[2]);
         })
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
 
         return new LocalDateTimeline<>(segments);
     }
@@ -399,73 +410,72 @@ public class LocalDateTimelineExamplesTest {
     public void eksempel_splitt_av_tidsserie_ved_period_year() throws Exception {
 
         var timeline = new LocalDateTimeline<>(
-            List.of(
-                toSegment("2019-12-01", "2020-12-31", "A"),
-                toSegment("2017-01-01", "2017-12-31", "B")));
+                List.of(
+                        toSegment("2019-12-01", "2020-12-31", "A"),
+                        toSegment("2017-01-01", "2017-12-31", "B")));
 
         LocalDate startDate = LocalDate.parse("2016-01-01");
         LocalDate endDate = timeline.getMaxLocalDate();
         var mappedTimeline = timeline.splitAtRegular(startDate, endDate, Period.ofYears(1));
 
         var expectedTimeline = new LocalDateTimeline<>(
-            List.of(
-                toSegment("2019-12-01", "2019-12-31", "A"),
-                toSegment("2020-01-01", "2020-12-31", "A"),
-                toSegment("2017-01-01", "2017-12-31", "B")));
+                List.of(
+                        toSegment("2019-12-01", "2019-12-31", "A"),
+                        toSegment("2020-01-01", "2020-12-31", "A"),
+                        toSegment("2017-01-01", "2017-12-31", "B")));
 
         assertThat(mappedTimeline).isEqualTo(expectedTimeline);
     }
-    
+
     @Test
     public void eksempel_splitt_av_tidsserie_ved_period_day_3() throws Exception {
 
         var timeline = new LocalDateTimeline<>(
-            List.of(
-                toSegment("2019-12-01", "2020-01-02", "A")));
+                List.of(
+                        toSegment("2019-12-01", "2020-01-02", "A")));
 
         LocalDate startDate = LocalDate.parse("2019-12-01");
         LocalDate endDate = timeline.getMaxLocalDate().plusDays(1); // ta med litt ekstra
         var mappedTimeline = timeline.splitAtRegular(startDate, endDate, Period.ofDays(3));
 
         var expectedTimeline = new LocalDateTimeline<>(
-            List.of(
-                toSegment("2019-12-01", "2019-12-03", "A"),
-                toSegment("2019-12-04", "2019-12-06", "A"),
-                toSegment("2019-12-07", "2019-12-09", "A"),
-                toSegment("2019-12-10", "2019-12-12", "A"),
-                toSegment("2019-12-13", "2019-12-15", "A"),
-                toSegment("2019-12-16", "2019-12-18", "A"),
-                toSegment("2019-12-19", "2019-12-21", "A"),
-                toSegment("2019-12-22", "2019-12-24", "A"),
-                toSegment("2019-12-25", "2019-12-27", "A"),
-                toSegment("2019-12-28", "2019-12-30", "A"),
-                toSegment("2019-12-31", "2020-01-02", "A")));
+                List.of(
+                        toSegment("2019-12-01", "2019-12-03", "A"),
+                        toSegment("2019-12-04", "2019-12-06", "A"),
+                        toSegment("2019-12-07", "2019-12-09", "A"),
+                        toSegment("2019-12-10", "2019-12-12", "A"),
+                        toSegment("2019-12-13", "2019-12-15", "A"),
+                        toSegment("2019-12-16", "2019-12-18", "A"),
+                        toSegment("2019-12-19", "2019-12-21", "A"),
+                        toSegment("2019-12-22", "2019-12-24", "A"),
+                        toSegment("2019-12-25", "2019-12-27", "A"),
+                        toSegment("2019-12-28", "2019-12-30", "A"),
+                        toSegment("2019-12-31", "2020-01-02", "A")));
 
         assertThat(mappedTimeline).isEqualTo(expectedTimeline);
     }
-    
+
     @Test
     public void eksempel_splitt_av_tidsserie_ved_period_week_1() throws Exception {
 
         var timeline = new LocalDateTimeline<>(
-            List.of(
-                toSegment("2019-12-01", "2020-01-02", "A")));
+                List.of(
+                        toSegment("2019-12-01", "2020-01-02", "A")));
 
         LocalDate startDate = LocalDate.parse("2019-12-01");
         LocalDate endDate = timeline.getMaxLocalDate();
         var mappedTimeline = timeline.splitAtRegular(startDate, endDate, Period.ofWeeks(1));
 
         var expectedTimeline = new LocalDateTimeline<>(
-            List.of(
-                toSegment("2019-12-01", "2019-12-07", "A"),
-                toSegment("2019-12-08", "2019-12-14", "A"),
-                toSegment("2019-12-15", "2019-12-21", "A"),
-                toSegment("2019-12-22", "2019-12-28", "A"),
-                toSegment("2019-12-29", "2020-01-02", "A")));
+                List.of(
+                        toSegment("2019-12-01", "2019-12-07", "A"),
+                        toSegment("2019-12-08", "2019-12-14", "A"),
+                        toSegment("2019-12-15", "2019-12-21", "A"),
+                        toSegment("2019-12-22", "2019-12-28", "A"),
+                        toSegment("2019-12-29", "2020-01-02", "A")));
 
         assertThat(mappedTimeline).isEqualTo(expectedTimeline);
     }
-
 
     private static <V> LocalDateSegment<V> toSegment(String dt1, String dt2, V val) {
         return new LocalDateSegment<>(LocalDate.parse(dt1), LocalDate.parse(dt2), val);
