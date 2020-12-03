@@ -284,7 +284,7 @@ public class LocalDateTimelineTest {
         LocalDate dag = LocalDate.now();
 
         for (int i = 0; i < 1000; i++) {
-            segmenter.add(new LocalDateSegment<String>(new LocalDateInterval(dag, dag), dag.toString()));
+            segmenter.add(new LocalDateSegment<>(new LocalDateInterval(dag, dag), dag.toString()));
             dag = dag.plusDays(1);
         }
 
