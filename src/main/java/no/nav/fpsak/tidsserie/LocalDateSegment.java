@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import no.nav.fpsak.tidsserie.json.LocalDateSegmentFormatters;
 
 /**
- * Et segment representerer en verdi for et enkelt dato intervall.
+ * Segment representerer en verdi for et enkelt dato intervall.
  * 
  * @param <V> type verdi
  */
