@@ -7,7 +7,7 @@
 
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/navikt/fp-tidsserie.svg?style=for-the-badge&logo=apache-maven&label=)
 
-# Bibliotek for Tidsserie håndtering
+# Bibliotek for tidsserie-håndtering
 Bibliotek for å forenkle håndtering av periodiserte data.  
 Dette tar vekk kompleksitet knyttet til periodisering av data og forenkler det ned til et sett med operasjoner på en tidsserie av periodiserte data.  
 
