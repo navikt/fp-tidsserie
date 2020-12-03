@@ -12,8 +12,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.assertj.core.api.Assertions;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import no.nav.fpsak.tidsserie.json.JsonTimelineFormatter;
 
@@ -37,12 +37,12 @@ public class LocalDateTimelineTest {
     public void skal_ha_equal_tidslinje_når_intersecter_seg_selv() throws Exception {
         LocalDateTimeline<String> continuousTimeline = basicContinuousTimeline();
         Assertions
-            .assertThat(continuousTimeline.intersection(continuousTimeline, StandardCombinators::coalesceLeftHandSide))
-            .isEqualTo(continuousTimeline);
+                .assertThat(continuousTimeline.intersection(continuousTimeline, StandardCombinators::coalesceLeftHandSide))
+                .isEqualTo(continuousTimeline);
 
         LocalDateTimeline<String> discontinuousTimeline = basicDiscontinuousTimeline();
         assertThat(discontinuousTimeline.intersection(discontinuousTimeline, StandardCombinators::coalesceLeftHandSide))
-            .isEqualTo(discontinuousTimeline);
+                .isEqualTo(discontinuousTimeline);
     }
 
     @Test
@@ -53,15 +53,15 @@ public class LocalDateTimelineTest {
         LocalDateTimeline<String> annenTimeline = new LocalDateTimeline<>(today.plusDays(1), today.plusDays(5), "bye");
 
         LocalDateTimeline<String> intersection = timeline.intersection(annenTimeline,
-            StandardCombinators::coalesceRightHandSide);
+                StandardCombinators::coalesceRightHandSide);
 
         assertThat(intersection)
-            .isEqualTo(new LocalDateTimeline<>(Arrays.asList(new LocalDateSegment<>(today.plusDays(1), today.plusDays(2), "bye"))));
+                .isEqualTo(new LocalDateTimeline<>(Arrays.asList(new LocalDateSegment<>(today.plusDays(1), today.plusDays(2), "bye"))));
 
         LocalDateTimeline<String> intersection2 = timeline.intersection(annenTimeline,
-            StandardCombinators::coalesceLeftHandSide);
+                StandardCombinators::coalesceLeftHandSide);
         assertThat(intersection2)
-            .isEqualTo(new LocalDateTimeline<>(Arrays.asList(new LocalDateSegment<>(today.plusDays(1), today.plusDays(2), "hello"))));
+                .isEqualTo(new LocalDateTimeline<>(Arrays.asList(new LocalDateSegment<>(today.plusDays(1), today.plusDays(2), "hello"))));
 
     }
 
@@ -73,20 +73,20 @@ public class LocalDateTimelineTest {
         LocalDateTimeline<String> annenTimeline = new LocalDateTimeline<>(today.plusDays(1), today.plusDays(5), "bye");
 
         List<LocalDateSegment<String>> expectedSegmenter = Arrays.asList(
-            new LocalDateSegment<>(today, today, "hello"),
-            new LocalDateSegment<>(today.plusDays(1), today.plusDays(2), "hello"),
-            new LocalDateSegment<>(today.plusDays(3), today.plusDays(5), "bye"),
-            new LocalDateSegment<>(today.plusDays(6), today.plusDays(8), "world"));
+                new LocalDateSegment<>(today, today, "hello"),
+                new LocalDateSegment<>(today.plusDays(1), today.plusDays(2), "hello"),
+                new LocalDateSegment<>(today.plusDays(3), today.plusDays(5), "bye"),
+                new LocalDateSegment<>(today.plusDays(6), today.plusDays(8), "world"));
 
         LocalDateTimeline<String> crossJoined = timeline.crossJoin(annenTimeline,
-            StandardCombinators::coalesceLeftHandSide);
+                StandardCombinators::coalesceLeftHandSide);
 
         assertThat(crossJoined.toSegments()).as("startdato = " + today).containsAll(expectedSegmenter);
 
         assertThat(crossJoined).as("startdato = " + today).isEqualTo(new LocalDateTimeline<>(expectedSegmenter));
 
     }
-    
+
     @SuppressWarnings("unchecked")
     @Test
     public void skal_cross_joine_tom_tidsserie() throws Exception {
@@ -99,13 +99,13 @@ public class LocalDateTimelineTest {
     public void skal_ha_empty_tidslinje_når_disjointer_seg_selv() throws Exception {
         LocalDateTimeline<String> continuousTimeline = basicContinuousTimeline();
         Assertions.assertThat(continuousTimeline.disjoint(continuousTimeline, StandardCombinators::coalesceLeftHandSide))
-            .isEqualTo(LocalDateTimeline.EMPTY_TIMELINE);
+                .isEqualTo(LocalDateTimeline.EMPTY_TIMELINE);
 
         LocalDateTimeline<String> discontinuousTimeline = basicDiscontinuousTimeline();
         Assertions
-            .assertThat(discontinuousTimeline.intersection(discontinuousTimeline,
-                StandardCombinators::coalesceLeftHandSide))
-            .isEqualTo(discontinuousTimeline);
+                .assertThat(discontinuousTimeline.intersection(discontinuousTimeline,
+                        StandardCombinators::coalesceLeftHandSide))
+                .isEqualTo(discontinuousTimeline);
     }
 
     @Test
@@ -142,7 +142,8 @@ public class LocalDateTimelineTest {
         assertThat(timeline.size()).isEqualTo(2);
 
         // Act
-        LocalDateTimeline<String> compressedTimeline = timeline.compress(String::equals, (i, v1,v2) -> new LocalDateSegment<>(i, v1.getValue()+"*"+v2.getValue()));
+        LocalDateTimeline<String> compressedTimeline = timeline.compress(String::equals,
+                (i, v1, v2) -> new LocalDateSegment<>(i, v1.getValue() + "*" + v2.getValue()));
 
         // Assert
         assertThat(compressedTimeline.size()).isEqualTo(1);
@@ -182,21 +183,21 @@ public class LocalDateTimelineTest {
         LocalDate d5 = d4.plusDays(2);
 
         List<LocalDateSegment<String>> segmenterMedOverlapp = List.of(
-            new LocalDateSegment<>(d1, d2, "A"),
-            new LocalDateSegment<>(d3, d4, "B"),
-            new LocalDateSegment<>(d4, d5, "C"),
-            new LocalDateSegment<>(d3, d4, "D"));
+                new LocalDateSegment<>(d1, d2, "A"),
+                new LocalDateSegment<>(d3, d4, "B"),
+                new LocalDateSegment<>(d4, d5, "C"),
+                new LocalDateSegment<>(d3, d4, "D"));
 
         var timeline = LocalDateTimeline.buildGroupOverlappingSegments(segmenterMedOverlapp).compress();
         List<LocalDateInterval> intervaller = List.copyOf(timeline.getLocalDateIntervals());
         assertThat(intervaller).hasSize(4);
-        
+
         assertThat(timeline.intersection(intervaller.get(0))).isEqualTo(new LocalDateTimeline<>(intervaller.get(0), List.of("A")));
 
         assertThat(timeline.intersection(intervaller.get(1))).isEqualTo(new LocalDateTimeline<>(intervaller.get(1), List.of("B", "D")));
-        
+
         assertThat(timeline.intersection(intervaller.get(2))).isEqualTo(new LocalDateTimeline<>(intervaller.get(2), List.of("B", "C", "D")));
-        
+
         assertThat(timeline.intersection(intervaller.get(3))).isEqualTo(new LocalDateTimeline<>(intervaller.get(3), List.of("C")));
 
     }
@@ -238,7 +239,7 @@ public class LocalDateTimelineTest {
         LocalDateInterval forventetResultat = new LocalDateInterval(sistePeriode.getFomDato(), sistePeriode.getTomDato());
         assertThat(localDateTimeline.compress().getLocalDateIntervals()).contains(forventetResultat);
     }
-    
+
     @Test
     public void skal_disjoint_samme_tidsserie() throws Exception {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
@@ -251,30 +252,30 @@ public class LocalDateTimelineTest {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
         Assertions.assertThat(tidslinje.disjoint(LocalDateTimeline.EMPTY_TIMELINE)).isEqualTo(tidslinje);
     }
-    
+
     @SuppressWarnings("unchecked")
     @Test
     public void skal_disjoint_med_tom_tidsserie() throws Exception {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
         Assertions.assertThat(LocalDateTimeline.EMPTY_TIMELINE.disjoint(tidslinje)).isEqualTo(LocalDateTimeline.EMPTY_TIMELINE);
     }
-    
+
     @Test
     public void skal_disjoint_med_annen_tidsserie() throws Exception {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
         var segments = tidslinje.toSegments();
         var segLast = segments.last();
-        
+
         var annenTidsserie = new LocalDateTimeline<>(Arrays.asList(segLast));
-        
+
         var segmentsUtenAnnen = new TreeSet<>(segments);
         segmentsUtenAnnen.remove(segLast);
         var resultatTidsserie = new LocalDateTimeline<>(segmentsUtenAnnen);
 
         Assertions.assertThat(tidslinje.disjoint(annenTidsserie)).isEqualTo(resultatTidsserie);
     }
-    
-    @Ignore("Micro performance test - kun for spesielt interesserte! Kan brukes til å avsjekke forbedringer i join algoritme")
+
+    @Disabled("Micro performance test - kun for spesielt interesserte! Kan brukes til å avsjekke forbedringer i join algoritme")
     @Test
     public void kjapp_ytelse_test() throws Exception {
 
@@ -291,7 +292,7 @@ public class LocalDateTimelineTest {
 
         LocalDateTimeline<String> timeline = new LocalDateTimeline<>(segmenter);
         LocalDateTimeline<String> intersection = timeline.intersection(new LocalDateTimeline<>(segmenter),
-            StandardCombinators::coalesceLeftHandSide);
+                StandardCombinators::coalesceLeftHandSide);
         assertThat(intersection).isEqualTo(timeline);
 
         System.out.println(System.currentTimeMillis() - start);
