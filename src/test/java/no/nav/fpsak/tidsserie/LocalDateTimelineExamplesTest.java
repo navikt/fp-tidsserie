@@ -3,6 +3,7 @@ package no.nav.fpsak.tidsserie;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -131,8 +132,7 @@ public class LocalDateTimelineExamplesTest {
                 { 6, 6, List.of("B") },
         }));
     }
-    
-    
+
     @Test
     public void eksempel_slå_sammen_med_alle_verdier() throws Exception {
         // bruker tall til å referer relative dager til today
@@ -150,7 +150,7 @@ public class LocalDateTimelineExamplesTest {
         assertThat(timelineA.intersection(timelineB, StandardCombinators::allValues)).isEqualTo(toTimeline(new Object[][] {
                 { 3, 5, List.of("A", "B") },
         }));
-        
+
         // cartesian product (cross join) med Alle Verdier: A ∪ B
         assertThat(timelineA.combine(timelineB, StandardCombinators::allValues, JoinStyle.CROSS_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, Arrays.asList("A") },
@@ -201,7 +201,7 @@ public class LocalDateTimelineExamplesTest {
                 { 3, 5, List.of("A") },
         }));
     }
-    
+
     @Test
     public void eksempel_kun_høyre_side() throws Exception {
         // bruker tall til å referer relative dager til today
@@ -220,7 +220,7 @@ public class LocalDateTimelineExamplesTest {
                 { 3, 5, "B" },
         }));
     }
-    
+
     @Test
     public void eksempel_slå_sammen_tall_verdier() throws Exception {
         // bruker tall til å referer relative dager til today
@@ -277,7 +277,7 @@ public class LocalDateTimelineExamplesTest {
                 { 6, 6, B },
         }));
     }
-    
+
     @Test
     public void eksempel_multipliser_sammen_tall_verdier() throws Exception {
         // bruker tall til å referer relative dager til today
@@ -393,5 +393,81 @@ public class LocalDateTimelineExamplesTest {
             .collect(Collectors.toList());
 
         return new LocalDateTimeline<>(segments);
+    }
+
+    @Test
+    public void eksempel_splitt_av_tidsserie_ved_period_year() throws Exception {
+
+        var timeline = new LocalDateTimeline<>(
+            List.of(
+                toSegment("2019-12-01", "2020-12-31", "A"),
+                toSegment("2017-01-01", "2017-12-31", "B")));
+
+        LocalDate startDate = LocalDate.parse("2016-01-01");
+        LocalDate endDate = timeline.getMaxLocalDate();
+        var mappedTimeline = timeline.splitAtRegular(startDate, endDate, Period.ofYears(1));
+
+        var expectedTimeline = new LocalDateTimeline<>(
+            List.of(
+                toSegment("2019-12-01", "2019-12-31", "A"),
+                toSegment("2020-01-01", "2020-12-31", "A"),
+                toSegment("2017-01-01", "2017-12-31", "B")));
+
+        assertThat(mappedTimeline).isEqualTo(expectedTimeline);
+    }
+    
+    @Test
+    public void eksempel_splitt_av_tidsserie_ved_period_day_3() throws Exception {
+
+        var timeline = new LocalDateTimeline<>(
+            List.of(
+                toSegment("2019-12-01", "2020-01-02", "A")));
+
+        LocalDate startDate = LocalDate.parse("2019-12-01");
+        LocalDate endDate = timeline.getMaxLocalDate().plusDays(1); // ta med litt ekstra
+        var mappedTimeline = timeline.splitAtRegular(startDate, endDate, Period.ofDays(3));
+
+        var expectedTimeline = new LocalDateTimeline<>(
+            List.of(
+                toSegment("2019-12-01", "2019-12-03", "A"),
+                toSegment("2019-12-04", "2019-12-06", "A"),
+                toSegment("2019-12-07", "2019-12-09", "A"),
+                toSegment("2019-12-10", "2019-12-12", "A"),
+                toSegment("2019-12-13", "2019-12-15", "A"),
+                toSegment("2019-12-16", "2019-12-18", "A"),
+                toSegment("2019-12-19", "2019-12-21", "A"),
+                toSegment("2019-12-22", "2019-12-24", "A"),
+                toSegment("2019-12-25", "2019-12-27", "A"),
+                toSegment("2019-12-28", "2019-12-30", "A"),
+                toSegment("2019-12-31", "2020-01-02", "A")));
+
+        assertThat(mappedTimeline).isEqualTo(expectedTimeline);
+    }
+    
+    @Test
+    public void eksempel_splitt_av_tidsserie_ved_period_week_1() throws Exception {
+
+        var timeline = new LocalDateTimeline<>(
+            List.of(
+                toSegment("2019-12-01", "2020-01-02", "A")));
+
+        LocalDate startDate = LocalDate.parse("2019-12-01");
+        LocalDate endDate = timeline.getMaxLocalDate();
+        var mappedTimeline = timeline.splitAtRegular(startDate, endDate, Period.ofWeeks(1));
+
+        var expectedTimeline = new LocalDateTimeline<>(
+            List.of(
+                toSegment("2019-12-01", "2019-12-07", "A"),
+                toSegment("2019-12-08", "2019-12-14", "A"),
+                toSegment("2019-12-15", "2019-12-21", "A"),
+                toSegment("2019-12-22", "2019-12-28", "A"),
+                toSegment("2019-12-29", "2020-01-02", "A")));
+
+        assertThat(mappedTimeline).isEqualTo(expectedTimeline);
+    }
+
+
+    private static <V> LocalDateSegment<V> toSegment(String dt1, String dt2, V val) {
+        return new LocalDateSegment<>(LocalDate.parse(dt1), LocalDate.parse(dt2), val);
     }
 }
