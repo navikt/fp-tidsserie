@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.Period;
-import java.time.ZoneId;
 import java.time.chrono.ChronoLocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -13,8 +12,6 @@ import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeSet;
-
-import org.threeten.extra.Interval;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -81,14 +78,6 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
 
     public static LocalDate min(LocalDate en, LocalDate to) {
         return en.isBefore(to) ? en : to;
-    }
-
-    public static Interval toInterval(LocalDate startDateInclusive, LocalDate endDate, boolean includeEnd) {
-        var end = TIDENES_ENDE.equals(endDate) ? endDate.atStartOfDay()
-                : includeEnd ? endDate.atStartOfDay().plusDays(1) : endDate.atStartOfDay();
-        return Interval.of(
-                startDateInclusive.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant(),
-                end.atZone(ZoneId.systemDefault()).toInstant());
     }
 
     public static LocalDateInterval withPeriodAfterDate(LocalDate startDate, Period period) {
@@ -269,10 +258,6 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
         resultat.addAll(this.except(annen));
         this.overlap(annen).ifPresent(o -> resultat.add(o));
         return resultat;
-    }
-
-    public Interval toInterval() {
-        return toInterval(getFomDato(), getTomDato(), true);
     }
 
     public Period toPeriod() {
