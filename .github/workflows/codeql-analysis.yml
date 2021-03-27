@@ -40,13 +40,13 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-maven-${{ env.CACHE_KEY }}
+          key: ${{ runner.os }}-codeql-${{ env.CACHE_KEY }}
           restore-keys: |
-            ${{ runner.os }}-maven-${{ env.PREVIOUS_CACHE_KEY }}
+            ${{ runner.os }}-codeql-${{ env.PREVIOUS_CACHE_KEY }}
 
       - uses: actions/setup-java@v1
         with:
-          java-version: 1.11
+          java-version: 11
 
     # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
@@ -58,10 +58,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          mvn clean package -B -V -e --settings ./.github/.m2/settings.xml -f "pom.xml" -Dfindbugs.skip -Dcheckstyle.skip -Dpmd.skip=true -Denforcer.skip -Dmaven.javadoc.skip -DskipTests -Dmaven.test.skip.exec -Dlicense.skip=true -Drat.skip=true
-        env:
-          GITHUB_USERNAME: x-access-token
-          GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          mvn clean package -B -V -e -Dfindbugs.skip -Dcheckstyle.skip -Dpmd.skip=true -Denforcer.skip -Dmaven.javadoc.skip -DskipTests -Dmaven.test.skip.exec -Dlicense.skip=true -Drat.skip=true
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v1
