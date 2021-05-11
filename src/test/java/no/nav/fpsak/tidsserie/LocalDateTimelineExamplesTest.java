@@ -398,9 +398,8 @@ public class LocalDateTimelineExamplesTest {
     // convenience metode for å opprette en tidsserie enkelt
     @SuppressWarnings("unchecked")
     private <V> LocalDateTimeline<V> toTimeline(Object[][] data) {
-        List<LocalDateSegment<V>> segments = Arrays.stream(data).map(arr -> {
-            return new LocalDateSegment<>(today.plusDays((int) arr[0]), today.plusDays((int) arr[1]), (V) arr[2]);
-        })
+        List<LocalDateSegment<V>> segments = Arrays.stream(data)
+                .map(arr -> new LocalDateSegment<>(today.plusDays((int) arr[0]), today.plusDays((int) arr[1]), (V) arr[2]))
                 .collect(Collectors.toList());
 
         return new LocalDateTimeline<>(segments);

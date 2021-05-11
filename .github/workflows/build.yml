@@ -24,7 +24,7 @@ jobs:
           key: ${{ runner.os }}-trunk-${{ hashFiles('**/pom.xml') }}
       - uses: actions/setup-java@v1
         with:
-          java-version: 11
+          java-version: 16
 
       - name: Build artifacts & deploy
         shell: bash

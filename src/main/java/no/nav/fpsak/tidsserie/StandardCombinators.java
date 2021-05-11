@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import no.nav.fpsak.tidsserie.LocalDateTimeline.JoinStyle;
 
@@ -73,11 +74,7 @@ public class StandardCombinators {
         } else if (lhs == null && rhs == null) {
             return null;
         } else {
-            if (lhs != null) {
-                return new LocalDateSegment<>(dateInterval, Collections.singletonList(lhs.getValue()));
-            } else {
-                return new LocalDateSegment<>(dateInterval, Collections.singletonList(rhs.getValue()));
-            }
+            return new LocalDateSegment<>(dateInterval, Collections.singletonList(Objects.requireNonNullElse(lhs, rhs).getValue()));
         }
     }
 
@@ -159,26 +156,17 @@ public class StandardCombinators {
     @SuppressWarnings("unchecked")
     private static <L extends Number, R extends Number> L sumNonNull(L lhs, R rhs) {
         String type = lhs.getClass().getSimpleName();
-        switch (type) {
-            case "Long":
-                return (L) Long.valueOf(lhs.longValue() + rhs.longValue());
-            case "Integer":
-                return (L) Integer.valueOf(lhs.intValue() + rhs.intValue());
-            case "Double":
-                return (L) Double.valueOf(lhs.doubleValue() + rhs.doubleValue());
-            case "Float":
-                return (L) Float.valueOf(lhs.floatValue() + rhs.floatValue());
-            case "Short":
-                return (L) Short.valueOf((short) (lhs.shortValue() + rhs.shortValue()));
-            case "Byte":
-                return (L) Byte.valueOf((byte) (lhs.byteValue() + rhs.byteValue()));
-            case "BigDecimal":
-                return (L) ((BigDecimal) lhs).add(new BigDecimal(rhs.toString()));
-            case "BigInteger":
-                return (L) ((BigInteger) lhs).add(new BigInteger(rhs.toString()));
-            default:
-                return (L) Double.valueOf(lhs.doubleValue() + rhs.doubleValue());
-        }
+        return switch (type) {
+            case "Long" -> (L) Long.valueOf(lhs.longValue() + rhs.longValue());
+            case "Integer" -> (L) Integer.valueOf(lhs.intValue() + rhs.intValue());
+            case "Double" -> (L) Double.valueOf(lhs.doubleValue() + rhs.doubleValue());
+            case "Float" -> (L) Float.valueOf(lhs.floatValue() + rhs.floatValue());
+            case "Short" -> (L) Short.valueOf((short) (lhs.shortValue() + rhs.shortValue()));
+            case "Byte" -> (L) Byte.valueOf((byte) (lhs.byteValue() + rhs.byteValue()));
+            case "BigDecimal" -> (L) ((BigDecimal) lhs).add(new BigDecimal(rhs.toString()));
+            case "BigInteger" -> (L) ((BigInteger) lhs).add(new BigInteger(rhs.toString()));
+            default -> (L) Double.valueOf(lhs.doubleValue() + rhs.doubleValue());
+        };
     }
 
     @SuppressWarnings("unchecked")
@@ -200,25 +188,16 @@ public class StandardCombinators {
     @SuppressWarnings("unchecked")
     private static <L extends Number, R extends Number> L productNonNull(L lhs, R rhs) {
         String type = lhs.getClass().getSimpleName();
-        switch (type) {
-            case "Long":
-                return (L) Long.valueOf(lhs.longValue() * rhs.longValue());
-            case "Integer":
-                return (L) Integer.valueOf(lhs.intValue() * rhs.intValue());
-            case "Double":
-                return (L) Double.valueOf(lhs.doubleValue() * rhs.doubleValue());
-            case "Float":
-                return (L) Float.valueOf(lhs.floatValue() * rhs.floatValue());
-            case "Short":
-                return (L) Short.valueOf((short) (lhs.shortValue() * rhs.shortValue()));
-            case "Byte":
-                return (L) Byte.valueOf((byte) (lhs.byteValue() * rhs.byteValue()));
-            case "BigDecimal":
-                return (L) ((BigDecimal) lhs).multiply(new BigDecimal(rhs.toString()));
-            case "BigInteger":
-                return (L) ((BigInteger) lhs).multiply(new BigInteger(rhs.toString()));
-            default:
-                return (L) Double.valueOf(lhs.doubleValue() * rhs.doubleValue());
-        }
+        return switch (type) {
+            case "Long" -> (L) Long.valueOf(lhs.longValue() * rhs.longValue());
+            case "Integer" -> (L) Integer.valueOf(lhs.intValue() * rhs.intValue());
+            case "Double" -> (L) Double.valueOf(lhs.doubleValue() * rhs.doubleValue());
+            case "Float" -> (L) Float.valueOf(lhs.floatValue() * rhs.floatValue());
+            case "Short" -> (L) Short.valueOf((short) (lhs.shortValue() * rhs.shortValue()));
+            case "Byte" -> (L) Byte.valueOf((byte) (lhs.byteValue() * rhs.byteValue()));
+            case "BigDecimal" -> (L) ((BigDecimal) lhs).multiply(new BigDecimal(rhs.toString()));
+            case "BigInteger" -> (L) ((BigInteger) lhs).multiply(new BigInteger(rhs.toString()));
+            default -> (L) Double.valueOf(lhs.doubleValue() * rhs.doubleValue());
+        };
     }
 }
