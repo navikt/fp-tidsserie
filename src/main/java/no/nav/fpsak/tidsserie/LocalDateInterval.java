@@ -238,7 +238,7 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
         NavigableSet<LocalDateInterval> resultat = new TreeSet<>();
         resultat.addAll(this.except(annen));
         resultat.addAll(annen.except(this));
-        this.overlap(annen).ifPresent(o -> resultat.add(o));
+        this.overlap(annen).ifPresent(resultat::add);
         return resultat;
     }
 
@@ -256,7 +256,7 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
 
         NavigableSet<LocalDateInterval> resultat = new TreeSet<>();
         resultat.addAll(this.except(annen));
-        this.overlap(annen).ifPresent(o -> resultat.add(o));
+        this.overlap(annen).ifPresent(resultat::add);
         return resultat;
     }
 

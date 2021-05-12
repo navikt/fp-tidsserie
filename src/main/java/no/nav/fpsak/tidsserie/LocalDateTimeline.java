@@ -339,14 +339,14 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         if (isEmpty()) {
             return Collections.emptyNavigableSet();
         }
-        return segments.stream().map(s -> s.getLocalDateInterval()).collect(Collectors.toCollection(TreeSet::new));
+        return segments.stream().map(LocalDateSegment::getLocalDateInterval).collect(Collectors.toCollection(TreeSet::new));
     }
     
     public NavigableSet<LocalDateInterval> getLocalDateIntervals() {
         if (isEmpty()) {
             return Collections.emptyNavigableSet();
         }
-        return segments.stream().map(s -> s.getLocalDateInterval()).collect(Collectors.toCollection(TreeSet::new));
+        return segments.stream().map(LocalDateSegment::getLocalDateInterval).collect(Collectors.toCollection(TreeSet::new));
     }
     
 
@@ -496,9 +496,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      */
     public <R> Optional<R> reduce(Reducer<V, R> reducer) {
         AtomicReference<R> result = new AtomicReference<>(null);
-        segments.forEach(d -> {
-            result.set(reducer.reduce(result.get(), d));
-        });
+        segments.forEach(d -> result.set(reducer.reduce(result.get(), d)));
         return Optional.ofNullable(result.get());
     }
 
@@ -548,7 +546,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             (isEmpty() ? "0" //$NON-NLS-1$
                 : getMinLocalDate() + ", " + getMaxLocalDate()) //$NON-NLS-1$
             + " [" + size() + "]" //$NON-NLS-1$ // $NON-NLS-2$
-            + "> = [" + getDatoIntervaller().stream().map(d -> String.valueOf(d)).collect(Collectors.joining(",")) + "]" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            + "> = [" + getDatoIntervaller().stream().map(String::valueOf).collect(Collectors.joining(",")) + "]" //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ;
     }
 
