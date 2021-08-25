@@ -18,15 +18,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-trunk-${{ hashFiles('**/pom.xml') }}
       - uses: actions/setup-java@v2
         with:
           java-version: '16'
           distribution: 'adopt'
-
+          cache: 'maven'
       - name: Build artifacts & deploy
         shell: bash
         run: |
