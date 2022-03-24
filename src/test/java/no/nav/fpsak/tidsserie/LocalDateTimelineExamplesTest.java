@@ -40,7 +40,7 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // cartesian product (cross join): A ∪ B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::concat, JoinStyle.CROSS_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::concat, JoinStyle.CROSS_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, "A" },
                 { 3, 5, "AB" },
                 { 6, 6, "B" },
@@ -48,7 +48,7 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // cartesian product (cross join) med Alle Verdier: A ∪ B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::bothValues, JoinStyle.CROSS_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::bothValues, JoinStyle.CROSS_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, Arrays.asList("A") },
                 { 3, 5, Arrays.asList("A", "B") },
                 { 6, 6, Arrays.asList("B") },
@@ -56,19 +56,19 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // relative complement (disjoint): A - B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::concat, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::concat, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, "A" },
                 { 7, 9, "A" },
         }));
 
         // relative complement (disjoint): B - A
-        assertThat(timelineB.combine(timelineA, StandardCombinators::concat, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineB.combineFaster(timelineA, StandardCombinators::concat, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
                 { 6, 6, "B" },
         }));
 
         // (left join): All objects belonging to A, including intersection with B, but
         // not non-intersecting B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::concat, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::concat, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, "A" },
                 { 3, 5, "AB" },
                 { 7, 9, "A" },
@@ -77,7 +77,7 @@ public class LocalDateTimelineExamplesTest {
         // motsatt av left join:
         // (right join): All objects belonging to B, including intersection with A, but
         // not non-intersecting A
-        assertThat(timelineA.combine(timelineB, StandardCombinators::concat, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::concat, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 3, 5, "AB" },
                 { 6, 6, "B" },
         }));
@@ -102,7 +102,7 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // cartesian product (cross join) med Alle Verdier: A ∪ B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::bothValues, JoinStyle.CROSS_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::bothValues, JoinStyle.CROSS_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, Arrays.asList("A") },
                 { 3, 5, Arrays.asList("A", "B") },
                 { 6, 6, Arrays.asList("B") },
@@ -110,19 +110,19 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // relative complement (disjoint): A - B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::bothValues, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::bothValues, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, List.of("A") },
                 { 7, 9, List.of("A") },
         }));
 
         // relative complement (disjoint): B - A
-        assertThat(timelineB.combine(timelineA, StandardCombinators::bothValues, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineB.combineFaster(timelineA, StandardCombinators::bothValues, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
                 { 6, 6, List.of("B") },
         }));
 
         // (left join): All objects belonging to A, including intersection with B, but
         // not non-intersecting B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::bothValues, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::bothValues, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, List.of("A") },
                 { 3, 5, List.of("A", "B") },
                 { 7, 9, List.of("A") },
@@ -131,7 +131,7 @@ public class LocalDateTimelineExamplesTest {
         // motsatt av left join:
         // (right join): All objects belonging to B, including intersection with A, but
         // not non-intersecting A
-        assertThat(timelineA.combine(timelineB, StandardCombinators::bothValues, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::bothValues, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 3, 5, List.of("A", "B") },
                 { 6, 6, List.of("B") },
         }));
@@ -156,7 +156,7 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // cartesian product (cross join) med Alle Verdier: A ∪ B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::allValues, JoinStyle.CROSS_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::allValues, JoinStyle.CROSS_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, Arrays.asList("A") },
                 { 3, 5, Arrays.asList("A", "B") },
                 { 6, 6, Arrays.asList("B") },
@@ -164,7 +164,7 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // relative complement (disjoint): A - B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::allValues, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::allValues, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, List.of("A") },
                 { 7, 9, List.of("A") },
         }));
@@ -174,7 +174,7 @@ public class LocalDateTimelineExamplesTest {
 
         // (left join): All objects belonging to A, including intersection with B, but
         // not non-intersecting B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::allValues, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::allValues, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, List.of("A") },
                 { 3, 5, List.of("A", "B") },
                 { 7, 9, List.of("A") },
@@ -183,7 +183,7 @@ public class LocalDateTimelineExamplesTest {
         // motsatt av left join:
         // (right join): All objects belonging to B, including intersection with A, but
         // not non-intersecting A
-        assertThat(timelineA.combine(timelineB, StandardCombinators::allValues, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::allValues, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 3, 5, List.of("A", "B") },
                 { 6, 6, List.of("B") },
         }));
@@ -250,7 +250,7 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // cartesian product (cross join): A ∪ B
-        LocalDateTimeline<Double> timelineAXB = timelineA.combine(timelineB, StandardCombinators::sum, JoinStyle.CROSS_JOIN);
+        LocalDateTimeline<Double> timelineAXB = timelineA.combineFaster(timelineB, StandardCombinators::sum, JoinStyle.CROSS_JOIN);
         assertThat(timelineAXB).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, A },
                 { 3, 5, AB },
@@ -259,19 +259,19 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // relative complement (disjoint): A - B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::sum, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::sum, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, A },
                 { 7, 9, A },
         }));
 
         // relative complement (disjoint): B - A
-        assertThat(timelineB.combine(timelineA, StandardCombinators::sum, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineB.combineFaster(timelineA, StandardCombinators::sum, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
                 { 6, 6, B },
         }));
 
         // (left join): All objects belonging to A, including intersection with B, but
         // not non-intersecting B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::sum, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::sum, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, A },
                 { 3, 5, AB },
                 { 7, 9, A },
@@ -280,7 +280,7 @@ public class LocalDateTimelineExamplesTest {
         // motsatt av left join:
         // (right join): All objects belonging to B, including intersection with A, but
         // not non-intersecting A
-        assertThat(timelineA.combine(timelineB, StandardCombinators::sum, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::sum, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 3, 5, AB },
                 { 6, 6, B },
         }));
@@ -309,7 +309,7 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // cartesian product (cross join): A ∪ B
-        LocalDateTimeline<Double> timelineAXB = timelineA.combine(timelineB, StandardCombinators::product, JoinStyle.CROSS_JOIN);
+        LocalDateTimeline<Double> timelineAXB = timelineA.combineFaster(timelineB, StandardCombinators::product, JoinStyle.CROSS_JOIN);
         assertThat(timelineAXB).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, 0d },
                 { 3, 5, AB },
@@ -318,19 +318,19 @@ public class LocalDateTimelineExamplesTest {
         }));
 
         // relative complement (disjoint): A - B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::product, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::product, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, 0d },
                 { 7, 9, 0d },
         }));
 
         // relative complement (disjoint): B - A
-        assertThat(timelineB.combine(timelineA, StandardCombinators::product, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineB.combineFaster(timelineA, StandardCombinators::product, JoinStyle.DISJOINT)).isEqualTo(toTimeline(new Object[][] {
                 { 6, 6, 0d },
         }));
 
         // (left join): All objects belonging to A, including intersection with B, but
         // not non-intersecting B
-        assertThat(timelineA.combine(timelineB, StandardCombinators::product, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::product, JoinStyle.LEFT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 0, 2, 0d },
                 { 3, 5, AB },
                 { 7, 9, 0d },
@@ -339,7 +339,7 @@ public class LocalDateTimelineExamplesTest {
         // motsatt av left join:
         // (right join): All objects belonging to B, including intersection with A, but
         // not non-intersecting A
-        assertThat(timelineA.combine(timelineB, StandardCombinators::product, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
+        assertThat(timelineA.combineFaster(timelineB, StandardCombinators::product, JoinStyle.RIGHT_JOIN)).isEqualTo(toTimeline(new Object[][] {
                 { 3, 5, AB },
                 { 6, 6, 0d },
         }));

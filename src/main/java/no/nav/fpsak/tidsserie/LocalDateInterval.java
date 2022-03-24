@@ -101,6 +101,10 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
         return ORDER_INTERVALS.compare(this, periode);
     }
 
+    public boolean contains(LocalDate dato) {
+        return !getFomDato().isAfter(dato) && !getTomDato().isBefore(dato);
+    }
+
     public boolean contains(LocalDateInterval other) {
         boolean inneholder = (getFomDato().isBefore(other.getFomDato()) || getFomDato().isEqual(other.getFomDato()))
                 && (getTomDato().isAfter(other.getTomDato()) || getTomDato().isEqual(other.getTomDato()));
