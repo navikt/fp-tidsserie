@@ -201,9 +201,12 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * NB: Nåværende implementasjon er kun egnet for mindre datasett (feks. &lt; x1000 segmenter).
      * Spesielt join har høyt minneforbruk og O(n^2) ytelse. (potensiale for å forbedre algoritme til O(nlogn)) men øker
      * kompleksitet. Ytelsen er nær uavhengig av type {@link JoinStyle}.
+     * <p>
+     * beholder inntil videre for å kunne teste ny mot gammel implementasjon
      */
-    public <T, R> LocalDateTimeline<R> combine(final LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator,
-                                               final JoinStyle combinationStyle) {
+    @Deprecated
+    <T, R> LocalDateTimeline<R> combineGammel(final LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator,
+                                              final JoinStyle combinationStyle) {
 
         LocalDateTimeline<R> quickExit = combinationStyle.checkQuickExit(this, other);
         if (quickExit != null) {
@@ -236,7 +239,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * <p>
      * Bedre kombinatorisk ytelse enn 'combine'. Bevarer begge for verifisering.
      */
-    public <T, R> LocalDateTimeline<R> combineFaster(final LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator, final JoinStyle combinationStyle) {
+    public <T, R> LocalDateTimeline<R> combine(final LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator, final JoinStyle combinationStyle) {
 
         LocalDateTimeline<R> quickExit = combinationStyle.checkQuickExit(this, other);
         if (quickExit != null) {
