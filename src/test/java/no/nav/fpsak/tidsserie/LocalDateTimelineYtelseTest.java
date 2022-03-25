@@ -12,14 +12,12 @@ import org.junit.jupiter.api.Test;
 import no.nav.fpsak.tidsserie.LocalDateTimeline.JoinStyle;
 
 @Disabled //kan kjøres lokalt for å få inntrykk av ytelse ved endringer på implementasjon
-public class LocalDateTimelineYtelseTest {
+class LocalDateTimelineYtelseTest {
 
     private final LocalDate today = LocalDate.now();
 
     @Test
-    public void lange_tidslinjer() throws Exception {
-        // bruker tall til å referer relative dager til today
-
+    void lange_tidslinjer() {
         for (int i = 0; i < 3000; i++) {
             int antall = 1000;
             int antallDagerPrIntervall = 5;
@@ -37,9 +35,7 @@ public class LocalDateTimelineYtelseTest {
     }
 
     @Test
-    public void korte_tidslinjer() throws Exception {
-        // bruker tall til å referer relative dager til today
-
+    void korte_tidslinjer() {
         for (int i = 0; i < 200000; i++) {
 
             int antall = 10;
