@@ -246,7 +246,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             return quickExit;
         }
 
-        NavigableSet<LocalDateInterval> intervallerIKombinertTidslinje = joinLocalDateIntervalFasterAndApplyJoinStyle(getLocalDateIntervals(), other.getLocalDateIntervals(), combinationStyle);
+        NavigableSet<LocalDateInterval> intervallerIKombinertTidslinje = utedIntervallerIKombinertTidslinje(toSegments(), other.toSegments(), combinationStyle);
 
         //henter alle verdier med en gang, slipper å iterere i hver tidslinje en gang pr intervall
         Map<LocalDateInterval, LocalDateSegment<V>> aktuelleVerdierFraDenneTidslinje = this.getSegments(intervallerIKombinertTidslinje);
@@ -798,20 +798,18 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         return joined;
     }
 
-    private NavigableSet<LocalDateInterval> joinLocalDateIntervalFasterAndApplyJoinStyle(NavigableSet<LocalDateInterval> lhsIntervaller, NavigableSet<LocalDateInterval> rhsIntervaller, JoinStyle combinationStyle) {
-
+    private <T> NavigableSet<LocalDateInterval> utedIntervallerIKombinertTidslinje(NavigableSet<LocalDateSegment<V>> lhsIntervaller, NavigableSet<LocalDateSegment<T>> rhsIntervaller, JoinStyle combinationStyle) {
         if (lhsIntervaller.isEmpty()) {
-            return combinationStyle.accept(RHS) ? rhsIntervaller : new TreeSet<>();
+            return combinationStyle.accept(RHS) ? toLocalDateIntervals(rhsIntervaller) : new TreeSet<>();
         }
         if (rhsIntervaller.isEmpty()) {
-            return combinationStyle.accept(LHS) ? lhsIntervaller : new TreeSet<>();
+            return combinationStyle.accept(LHS) ? toLocalDateIntervals(lhsIntervaller) : new TreeSet<>();
         }
-
         NavigableSet<LocalDateInterval> joined = new TreeSet<>();
-        Iterator<LocalDateInterval> lhsIterator = lhsIntervaller.iterator();
-        Iterator<LocalDateInterval> rhsIterator = rhsIntervaller.iterator();
-        LocalDateInterval lhs = lhsIterator.next();
-        LocalDateInterval rhs = rhsIterator.next();
+        Iterator<LocalDateSegment<V>> lhsIterator = lhsIntervaller.iterator();
+        Iterator<LocalDateSegment<T>> rhsIterator = rhsIntervaller.iterator();
+        LocalDateSegment<V> lhs = lhsIterator.next();
+        LocalDateSegment<T> rhs = rhsIterator.next();
         Set<LocalDate> startdatoKandidater = finKnekkpunkter(lhsIntervaller, rhsIntervaller);
         Iterator<LocalDate> startdatoIterator = startdatoKandidater.iterator();
         LocalDate fom = startdatoIterator.next();
@@ -819,8 +817,8 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             lhs = spolTil(lhs, lhsIterator, fom);
             rhs = spolTil(rhs, rhsIterator, fom);
 
-            boolean lhsMatch = lhs != null && lhs.contains(fom);
-            boolean rhsMatch = rhs != null && rhs.contains(fom);
+            boolean lhsMatch = lhs != null && lhs.getLocalDateInterval().contains(fom);
+            boolean rhsMatch = rhs != null && rhs.getLocalDateInterval().contains(fom);
             int combinedFlags = (lhsMatch ? LHS : 0) | (rhsMatch ? RHS : 0);
             LocalDate nesteFom = startdatoIterator.next();
             if (combinedFlags > 0 && combinationStyle.accept(combinedFlags)) {
@@ -832,21 +830,25 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         return joined;
     }
 
-    private Set<LocalDate> finKnekkpunkter(NavigableSet<LocalDateInterval> lhsIntervaller, NavigableSet<LocalDateInterval> rhsIntervaller) {
+    private static <T> NavigableSet<LocalDateInterval> toLocalDateIntervals(NavigableSet<LocalDateSegment<T>> rhsIntervaller) {
+        return rhsIntervaller.stream().map(LocalDateSegment::getLocalDateInterval).collect(Collectors.toCollection(TreeSet::new));
+    }
+
+    private static <V, T> Set<LocalDate> finKnekkpunkter(NavigableSet<LocalDateSegment<V>> lhsIntervaller, NavigableSet<LocalDateSegment<T>> rhsIntervaller) {
         Set<LocalDate> startdatoKandidater = new TreeSet<>();
-        for (LocalDateInterval intervall : lhsIntervaller) {
-            startdatoKandidater.add(intervall.getFomDato());
-            startdatoKandidater.add(intervall.getTomDato().plusDays(1));
+        for (LocalDateSegment<V> intervall : lhsIntervaller) {
+            startdatoKandidater.add(intervall.getFom());
+            startdatoKandidater.add(intervall.getTom().plusDays(1));
         }
-        for (LocalDateInterval intervall : rhsIntervaller) {
-            startdatoKandidater.add(intervall.getFomDato());
-            startdatoKandidater.add(intervall.getTomDato().plusDays(1));
+        for (LocalDateSegment<T> intervall : rhsIntervaller) {
+            startdatoKandidater.add(intervall.getFom());
+            startdatoKandidater.add(intervall.getTom().plusDays(1));
         }
         return startdatoKandidater;
     }
 
-    private LocalDateInterval spolTil(LocalDateInterval intervall, Iterator<LocalDateInterval> iterator, LocalDate fom) {
-        while (intervall != null && intervall.getTomDato().isBefore(fom)) {
+    private static <V> LocalDateSegment<V> spolTil(LocalDateSegment<V> intervall, Iterator<LocalDateSegment<V>> iterator, LocalDate fom) {
+        while (intervall != null && intervall.getTom().isBefore(fom)) {
             intervall = iterator.hasNext() ? iterator.next() : null;
         }
         return intervall;
