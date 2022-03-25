@@ -204,7 +204,6 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * <p>
      * beholder inntil videre for å kunne teste ny mot gammel implementasjon
      */
-    @Deprecated
     <T, R> LocalDateTimeline<R> combineGammel(final LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator,
                                               final JoinStyle combinationStyle) {
 
@@ -244,7 +243,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             return quickExit;
         }
 
-        NavigableSet<LocalDateInterval> intervallerIKombinertTidslinje = utedIntervallerIKombinertTidslinje(toSegments(), other.toSegments(), combinationStyle);
+        NavigableSet<LocalDateInterval> intervallerIKombinertTidslinje = utledIntervallerIKombinertTidslinje(toSegments(), other.toSegments(), combinationStyle);
 
         //henter alle verdier med en gang, slipper å iterere i hver tidslinje en gang pr intervall
         Map<LocalDateInterval, LocalDateSegment<V>> aktuelleVerdierFraDenneTidslinje = this.getSegments(intervallerIKombinertTidslinje);
@@ -411,7 +410,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
     }
 
     private Map<LocalDateInterval, LocalDateSegment<V>> getSegments(NavigableSet<LocalDateInterval> datoInterval) {
-        if (isEmpty() || datoInterval.isEmpty()) {
+        if (isEmpty()) {
             return Map.of();
         }
 
@@ -796,7 +795,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         return joined;
     }
 
-    private <T> NavigableSet<LocalDateInterval> utedIntervallerIKombinertTidslinje(NavigableSet<LocalDateSegment<V>> lhsIntervaller, NavigableSet<LocalDateSegment<T>> rhsIntervaller, JoinStyle combinationStyle) {
+    private <T> NavigableSet<LocalDateInterval> utledIntervallerIKombinertTidslinje(NavigableSet<LocalDateSegment<V>> lhsIntervaller, NavigableSet<LocalDateSegment<T>> rhsIntervaller, JoinStyle combinationStyle) {
         if (lhsIntervaller.isEmpty()) {
             return combinationStyle.accept(RHS) ? toLocalDateIntervals(rhsIntervaller) : new TreeSet<>();
         }
@@ -814,9 +813,9 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             lhs = spolTil(lhs, lhsIterator, fom);
             rhs = spolTil(rhs, rhsIterator, fom);
 
-            boolean lhsMatch = lhs != null && lhs.getLocalDateInterval().contains(fom);
-            boolean rhsMatch = rhs != null && rhs.getLocalDateInterval().contains(fom);
-            int combinedFlags = (lhsMatch ? LHS : 0) | (rhsMatch ? RHS : 0);
+            int lhsFlag = lhs != null && lhs.getLocalDateInterval().contains(fom) ? LHS : 0;
+            int rhsFlag = rhs != null && rhs.getLocalDateInterval().contains(fom) ? RHS : 0;
+            int combinedFlags = lhsFlag | rhsFlag;
             LocalDate nesteFom = startdatoIterator.next();
             if (combinedFlags > 0 && combinationStyle.accept(combinedFlags)) {
                 joined.add(new LocalDateInterval(fom, nesteFom.minusDays(1)));
@@ -873,8 +872,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
                 rhsSegment = rhsIterator.hasNext() ? rhsIterator.next() : null;
             }
             LocalDate forrige = next;
-            next = null;
-            next = oppdaterKandidatForNeste(forrige, next, lhsSegment);
+            next = oppdaterKandidatForNeste(forrige, null, lhsSegment);
             next = oppdaterKandidatForNeste(forrige, next, rhsSegment);
         }
 
