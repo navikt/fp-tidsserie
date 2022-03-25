@@ -6,10 +6,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import no.nav.fpsak.tidsserie.LocalDateTimeline.JoinStyle;
 
+@Disabled //kan kjøres lokalt for å få inntrykk av ytelse ved endringer på implementasjon
 public class LocalDateTimelineYtelseTest {
 
     private final LocalDate today = LocalDate.now();
