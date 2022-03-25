@@ -236,8 +236,6 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
 
     /**
      * Kombinerer to tidslinjer, med angitt combinator funksjon og {@link JoinStyle}.
-     * <p>
-     * Bedre kombinatorisk ytelse enn 'combine'. Bevarer begge for verifisering.
      */
     public <T, R> LocalDateTimeline<R> combine(final LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator, final JoinStyle combinationStyle) {
 
