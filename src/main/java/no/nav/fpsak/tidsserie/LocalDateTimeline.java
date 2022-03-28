@@ -207,11 +207,6 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
     <T, R> LocalDateTimeline<R> combineGammel(final LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator,
                                               final JoinStyle combinationStyle) {
 
-        LocalDateTimeline<R> quickExit = combinationStyle.checkQuickExit(this, other);
-        if (quickExit != null) {
-            return quickExit;
-        }
-
         // Join alle intervaller
         final NavigableMap<LocalDateInterval, Integer> joinDatoInterval = joinLocalDateIntervals(getLocalDateIntervals(),
                 other.getLocalDateIntervals());
@@ -220,7 +215,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         final List<LocalDateSegment<R>> combinedSegmenter = new ArrayList<>();
         final LocalDateTimeline<V> myTidslinje = this;
         joinDatoInterval.entrySet().stream()
-                .filter(e -> combinationStyle.accept(e.getValue()))
+                .filter(e -> combinationStyle.accept((e.getValue() & LHS) > 0, (e.getValue() & RHS) > 0))
                 .forEachOrdered(e -> {
                     LocalDateInterval key = e.getKey();
                     LocalDateSegment<R> nyVerdi = combinator.combine(key, myTidslinje.getSegment(key),
@@ -237,28 +232,41 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * Kombinerer to tidslinjer, med angitt combinator funksjon og {@link JoinStyle}.
      */
     public <T, R> LocalDateTimeline<R> combine(final LocalDateTimeline<T> other, final LocalDateSegmentCombinator<V, T, R> combinator, final JoinStyle combinationStyle) {
-
-        LocalDateTimeline<R> quickExit = combinationStyle.checkQuickExit(this, other);
-        if (quickExit != null) {
-            return quickExit;
-        }
-
-        NavigableSet<LocalDateInterval> intervallerIKombinertTidslinje = utledIntervallerIKombinertTidslinje(toSegments(), other.toSegments(), combinationStyle);
-
-        //henter alle verdier med en gang, slipper å iterere i hver tidslinje en gang pr intervall
-        Map<LocalDateInterval, LocalDateSegment<V>> aktuelleVerdierFraDenneTidslinje = this.getSegments(intervallerIKombinertTidslinje);
-        Map<LocalDateInterval, LocalDateSegment<T>> aktuelleVerdierFraAndreTidslinje = other.getSegments(intervallerIKombinertTidslinje);
-
         List<LocalDateSegment<R>> combinedSegmenter = new ArrayList<>();
-        intervallerIKombinertTidslinje.stream().forEachOrdered(key -> {
-            LocalDateSegment<R> nyVerdi = combinator.combine(key, aktuelleVerdierFraDenneTidslinje.get(key), aktuelleVerdierFraAndreTidslinje.get(key));
-            if (nyVerdi != null) {
-                combinedSegmenter.add(nyVerdi);
-            }
-        });
+        Iterator<LocalDateSegment<V>> lhsIterator = this.segments.iterator();
+        Iterator<LocalDateSegment<T>> rhsIterator = other.segments.iterator();
+        LocalDateSegment<V> lhs = lhsIterator.next();
+        LocalDateSegment<T> rhs = rhsIterator.next();
+        Iterator<LocalDate> startdatoIterator = new KnekkpunktIterator<>(this.segments, other.segments);
+        LocalDate fom = startdatoIterator.next();
+        while (startdatoIterator.hasNext()) {
+            lhs = spolTil(lhs, lhsIterator, fom);
+            rhs = spolTil(rhs, rhsIterator, fom);
 
+            boolean harLhs = lhs != null && lhs.getLocalDateInterval().contains(fom);
+            boolean harRhs = rhs != null && rhs.getLocalDateInterval().contains(fom);
+            LocalDate nesteFom = startdatoIterator.next();
+            if (combinationStyle.accept(harLhs, harRhs)) {
+                LocalDateInterval periode = new LocalDateInterval(fom, nesteFom.minusDays(1));
+                LocalDateSegment<V> tilpassetLhsSegment = harLhs ? splittVedDelvisOverlapp(this.segmentSplitter, lhs, periode) : null;
+                LocalDateSegment<T> tilpassetRhsSegment = harRhs ? splittVedDelvisOverlapp(other.segmentSplitter, rhs, periode) : null;
+                LocalDateSegment<R> nyVerdi = combinator.combine(periode, tilpassetLhsSegment, tilpassetRhsSegment);
+                if (nyVerdi != null) {
+                    combinedSegmenter.add(nyVerdi);
+                }
+            }
+            fom = nesteFom;
+        }
         return new LocalDateTimeline<>(combinedSegmenter);
     }
+
+    private static <X> LocalDateSegment<X> splittVedDelvisOverlapp(SegmentSplitter<X> segmentSplitter, LocalDateSegment<X> segment, LocalDateInterval ønsketIntervall) {
+        if (segment == null || segment.getLocalDateInterval().equals(ønsketIntervall)) {
+            return segment;
+        }
+        return segmentSplitter.apply(ønsketIntervall, segment);
+    }
+
 
     /**
      * Fikser opp tidslinjen slik at tilgrensende intervaller med equal verdi får et sammenhengende intervall. Nyttig
@@ -408,31 +416,6 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             return segmentSplitter.apply(datoInterval, datoSegment);
         }
     }
-
-    private Map<LocalDateInterval, LocalDateSegment<V>> getSegments(NavigableSet<LocalDateInterval> datoInterval) {
-        if (isEmpty()) {
-            return Map.of();
-        }
-
-        Iterator<LocalDateSegment<V>> segmentIterator = segments.iterator();
-        LocalDateSegment<V> segment = segmentIterator.next();
-
-        Map<LocalDateInterval, LocalDateSegment<V>> resultat = new LinkedHashMap<>();
-        for (LocalDateInterval datoIntervall : datoInterval) {
-            while (segment != null && segment.getTom().isBefore(datoIntervall.getFomDato())) {
-                segment = segmentIterator.hasNext() ? segmentIterator.next() : null;
-            }
-            if (segment != null && segment.getLocalDateInterval().overlaps(datoIntervall)) {
-                if (segment.getLocalDateInterval().equals(datoIntervall)) {
-                    resultat.put(datoIntervall, segment);
-                } else {
-                    resultat.put(datoIntervall, segmentSplitter.apply(datoIntervall, segment));
-                }
-            }
-        }
-        return resultat;
-    }
-
 
     @Override
     public int hashCode() {
@@ -795,37 +778,6 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         return joined;
     }
 
-    private <T> NavigableSet<LocalDateInterval> utledIntervallerIKombinertTidslinje(NavigableSet<LocalDateSegment<V>> lhsIntervaller, NavigableSet<LocalDateSegment<T>> rhsIntervaller, JoinStyle combinationStyle) {
-        if (lhsIntervaller.isEmpty()) {
-            return combinationStyle.accept(RHS) ? toLocalDateIntervals(rhsIntervaller) : new TreeSet<>();
-        }
-        if (rhsIntervaller.isEmpty()) {
-            return combinationStyle.accept(LHS) ? toLocalDateIntervals(lhsIntervaller) : new TreeSet<>();
-        }
-        NavigableSet<LocalDateInterval> joined = new TreeSet<>();
-        Iterator<LocalDateSegment<V>> lhsIterator = lhsIntervaller.iterator();
-        Iterator<LocalDateSegment<T>> rhsIterator = rhsIntervaller.iterator();
-        LocalDateSegment<V> lhs = lhsIterator.next();
-        LocalDateSegment<T> rhs = rhsIterator.next();
-        Iterator<LocalDate> startdatoIterator = new KnekkpunktIterator<>(lhsIntervaller, rhsIntervaller);
-        LocalDate fom = startdatoIterator.next();
-        while (startdatoIterator.hasNext()) {
-            lhs = spolTil(lhs, lhsIterator, fom);
-            rhs = spolTil(rhs, rhsIterator, fom);
-
-            int lhsFlag = lhs != null && lhs.getLocalDateInterval().contains(fom) ? LHS : 0;
-            int rhsFlag = rhs != null && rhs.getLocalDateInterval().contains(fom) ? RHS : 0;
-            int combinedFlags = lhsFlag | rhsFlag;
-            LocalDate nesteFom = startdatoIterator.next();
-            if (combinedFlags > 0 && combinationStyle.accept(combinedFlags)) {
-                joined.add(new LocalDateInterval(fom, nesteFom.minusDays(1)));
-            }
-            fom = nesteFom;
-        }
-
-        return joined;
-    }
-
     /**
      * Finner alle knekkpunkter fra to tidslinjer, i sekvens.
      * <p>
@@ -843,10 +795,13 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         public KnekkpunktIterator(NavigableSet<LocalDateSegment<V>> lhsIntervaller, NavigableSet<LocalDateSegment<T>> rhsIntervaller) {
             lhsIterator = lhsIntervaller.iterator();
             rhsIterator = rhsIntervaller.iterator();
-            lhsSegment = lhsIterator.next();
-            rhsSegment = rhsIterator.next();
+            lhsSegment = lhsIterator.hasNext() ? lhsIterator.next() : null;
+            rhsSegment = rhsIterator.hasNext() ? rhsIterator.next() : null;
 
-            next = lhsSegment.getFom().isBefore(rhsSegment.getFom()) ? lhsSegment.getFom() : rhsSegment.getFom();
+            next = lhsSegment != null ? lhsSegment.getFom() : null;
+            if (rhsSegment != null && (next == null || rhsSegment.getFom().isBefore(next))) {
+                next = rhsSegment.getFom();
+            }
         }
 
         @Override
@@ -871,7 +826,9 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             while (rhsSegment != null && !rhsSegment.getTom().plusDays(1).isAfter(next)) {
                 rhsSegment = rhsIterator.hasNext() ? rhsIterator.next() : null;
             }
+
             LocalDate forrige = next;
+            //neste knekkpunkt kan komme fra hvilken som helst av de to tidsseriene, må sjekke begge
             next = oppdaterKandidatForNeste(forrige, null, lhsSegment);
             next = oppdaterKandidatForNeste(forrige, next, rhsSegment);
         }
@@ -889,11 +846,6 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             }
             return besteKandidat;
         }
-    }
-
-
-    private static <T> NavigableSet<LocalDateInterval> toLocalDateIntervals(NavigableSet<LocalDateSegment<T>> rhsIntervaller) {
-        return rhsIntervaller.stream().map(LocalDateSegment::getLocalDateInterval).collect(Collectors.toCollection(TreeSet::new));
     }
 
     private static <V> LocalDateSegment<V> spolTil(LocalDateSegment<V> intervall, Iterator<LocalDateSegment<V>> iterator, LocalDate fom) {
@@ -924,8 +876,8 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
          */
         CROSS_JOIN {
             @Override
-            public boolean accept(int option) {
-                return option > 0;
+            public boolean accept(boolean harLhs, boolean harRhs) {
+                return harLhs || harRhs;
             }
         },
         /**
@@ -933,14 +885,8 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
          */
         DISJOINT {
             @Override
-            public boolean accept(int option) {
-                return option == LHS;
-            }
-
-            @SuppressWarnings("unchecked")
-            @Override
-            protected <V, T, R> LocalDateTimeline<R> checkQuickExit(LocalDateTimeline<V> lhs, LocalDateTimeline<T> rhs) {
-                return rhs.isEmpty() || lhs.isEmpty() ? (LocalDateTimeline<R>) lhs : null;
+            public boolean accept(boolean harLhs, boolean harRhs) {
+                return harLhs && !harRhs;
             }
         },
         /**
@@ -948,16 +894,10 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
          */
         INNER_JOIN {
             @Override
-            public boolean accept(int option) {
-                return (option & LHS) == LHS && (option & RHS) == RHS;
+            public boolean accept(boolean harLhs, boolean harRhs) {
+                return harLhs && harRhs;
             }
 
-            @Override
-            protected <V, T, R> LocalDateTimeline<R> checkQuickExit(LocalDateTimeline<V> lhs, LocalDateTimeline<T> rhs) {
-                boolean skip = ((lhs.isEmpty() || rhs.isEmpty()) || !new LocalDateInterval(lhs.getMinLocalDate(), lhs.getMaxLocalDate())
-                        .overlaps(new LocalDateInterval(rhs.getMinLocalDate(), rhs.getMaxLocalDate())));
-                return skip ? new LocalDateTimeline<R>(Collections.emptyList()) : null;
-            }
         },
         /**
          * alltid venstre tidsserie (LHS), høyre (RHS) kun med verdi dersom matcher. Combinator funksjon må hensyn ta
@@ -965,8 +905,8 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
          */
         LEFT_JOIN {
             @Override
-            public boolean accept(int option) {
-                return (option & LHS) == LHS;
+            public boolean accept(boolean harLhs, boolean harRhs) {
+                return harLhs;
             }
 
         },
@@ -976,17 +916,13 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
          */
         RIGHT_JOIN {
             @Override
-            public boolean accept(int option) {
-                return (option & RHS) == RHS;
+            public boolean accept(boolean harLhs, boolean harRhs) {
+                return harRhs;
             }
         };
 
-        public abstract boolean accept(int option);
+        public abstract boolean accept(boolean harLhs, boolean harRhs);
 
-        @SuppressWarnings("unused")
-        protected <V, T, R> LocalDateTimeline<R> checkQuickExit(LocalDateTimeline<V> lhs, LocalDateTimeline<T> rhs) {
-            return null;
-        }
     }
 
     /**
