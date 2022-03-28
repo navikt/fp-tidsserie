@@ -9,9 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.NoSuchElementException;
@@ -235,9 +233,12 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         List<LocalDateSegment<R>> combinedSegmenter = new ArrayList<>();
         Iterator<LocalDateSegment<V>> lhsIterator = this.segments.iterator();
         Iterator<LocalDateSegment<T>> rhsIterator = other.segments.iterator();
-        LocalDateSegment<V> lhs = lhsIterator.next();
-        LocalDateSegment<T> rhs = rhsIterator.next();
+        LocalDateSegment<V> lhs = lhsIterator.hasNext() ? lhsIterator.next() : null;
+        LocalDateSegment<T> rhs = rhsIterator.hasNext() ? rhsIterator.next() : null;
         Iterator<LocalDate> startdatoIterator = new KnekkpunktIterator<>(this.segments, other.segments);
+        if (!startdatoIterator.hasNext()) {
+            return empty(); //begge input-tidslinjer var tomme
+        }
         LocalDate fom = startdatoIterator.next();
         while (startdatoIterator.hasNext()) {
             lhs = spolTil(lhs, lhsIterator, fom);
