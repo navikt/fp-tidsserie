@@ -249,8 +249,8 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             long nesteFomEpochDay = startdatoIterator.nextEpochDay();
             if (combinationStyle.accept(harLhs, harRhs)) {
                 LocalDateInterval periode = new LocalDateInterval(fom, LocalDate.ofEpochDay(nesteFomEpochDay - 1));
-                LocalDateSegment<V> tilpassetLhsSegment = harLhs ? splittVedDelvisOverlapp(this.segmentSplitter, lhs, periode) : null;
-                LocalDateSegment<T> tilpassetRhsSegment = harRhs ? splittVedDelvisOverlapp(other.segmentSplitter, rhs, periode) : null;
+                LocalDateSegment<V> tilpassetLhsSegment = tilpassSegment(harLhs, lhs, periode, this.segmentSplitter);
+                LocalDateSegment<T> tilpassetRhsSegment = tilpassSegment(harRhs, rhs, periode, other.segmentSplitter);
                 LocalDateSegment<R> nyVerdi = combinator.combine(periode, tilpassetLhsSegment, tilpassetRhsSegment);
                 if (nyVerdi != null) {
                     combinedSegmenter.add(nyVerdi);
@@ -261,13 +261,15 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         return new LocalDateTimeline<>(combinedSegmenter);
     }
 
-    private static <X> LocalDateSegment<X> splittVedDelvisOverlapp(SegmentSplitter<X> segmentSplitter, LocalDateSegment<X> segment, LocalDateInterval ønsketIntervall) {
-        if (segment == null || segment.getLocalDateInterval().equals(ønsketIntervall)) {
+    private static <X> LocalDateSegment<X> tilpassSegment(boolean harSegment, LocalDateSegment<X> segment, LocalDateInterval ønsketIntervall, SegmentSplitter<X> segmentSplitter) {
+        if (!harSegment) {
+            return null;
+        }
+        if (segment.getLocalDateInterval().equals(ønsketIntervall)){
             return segment;
         }
         return segmentSplitter.apply(ønsketIntervall, segment);
     }
-
 
     /**
      * Fikser opp tidslinjen slik at tilgrensende intervaller med equal verdi får et sammenhengende intervall. Nyttig
