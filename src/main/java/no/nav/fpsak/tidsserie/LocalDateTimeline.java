@@ -39,8 +39,6 @@ import no.nav.fpsak.tidsserie.json.LocalDateTimelineFormatters;
  * <p>
  * Derimot kan to tidsserier kombineres vha. en {@link LocalDateSegmentCombinator} funksjon.
  * <p>
- * De fleste algoritmene for å kombinere to tidsserier er O(n^2) og ikke optimale for sammenstilling av 1000+ verdier.
- * <p>
  * API'et er modellert etter metoder fra java.time og threeten-extra Interval.
  *
  * @param <V> Java type for verdier i tidsserien.
@@ -235,21 +233,22 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         Iterator<LocalDateSegment<T>> rhsIterator = other.segments.iterator();
         LocalDateSegment<V> lhs = lhsIterator.hasNext() ? lhsIterator.next() : null;
         LocalDateSegment<T> rhs = rhsIterator.hasNext() ? rhsIterator.next() : null;
-        Iterator<LocalDate> startdatoIterator = new KnekkpunktIterator<>(this.segments, other.segments);
+        KnekkpunktIterator<V, T> startdatoIterator = new KnekkpunktIterator<>(this.segments, other.segments);
         if (!startdatoIterator.hasNext()) {
             return empty(); //begge input-tidslinjer var tomme
         }
 
-        LocalDate fom = startdatoIterator.next();
+        long fomEpochDay = startdatoIterator.nextEpochDay();
         while (startdatoIterator.hasNext()) {
+            LocalDate fom = LocalDate.ofEpochDay(fomEpochDay);
             lhs = spolTil(lhs, lhsIterator, fom);
             rhs = spolTil(rhs, rhsIterator, fom);
 
             boolean harLhs = lhs != null && lhs.getLocalDateInterval().contains(fom);
             boolean harRhs = rhs != null && rhs.getLocalDateInterval().contains(fom);
-            LocalDate nesteFom = startdatoIterator.next();
+            long nesteFomEpochDay = startdatoIterator.nextEpochDay();
             if (combinationStyle.accept(harLhs, harRhs)) {
-                LocalDateInterval periode = new LocalDateInterval(fom, nesteFom.minusDays(1));
+                LocalDateInterval periode = new LocalDateInterval(fom, LocalDate.ofEpochDay(nesteFomEpochDay - 1));
                 LocalDateSegment<V> tilpassetLhsSegment = harLhs ? splittVedDelvisOverlapp(this.segmentSplitter, lhs, periode) : null;
                 LocalDateSegment<T> tilpassetRhsSegment = harRhs ? splittVedDelvisOverlapp(other.segmentSplitter, rhs, periode) : null;
                 LocalDateSegment<R> nyVerdi = combinator.combine(periode, tilpassetLhsSegment, tilpassetRhsSegment);
@@ -257,7 +256,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
                     combinedSegmenter.add(nyVerdi);
                 }
             }
-            fom = nesteFom;
+            fomEpochDay = nesteFomEpochDay;
         }
         return new LocalDateTimeline<>(combinedSegmenter);
     }
@@ -784,15 +783,15 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * Finner alle knekkpunkter fra to tidslinjer, i sekvens.
      * <p>
      * Knekkpunkter er 'start av et intervall' og 'dagen etter slutt av et intervall'. Sistnevnte fordi det da kan være starten på et nytt intervall
-     * <p>
-     * Tidliger implementert ved å dytte alle knekkpunkter i et TreeSet og iterere, men dette er raskere O(n) vs O(n ln n), og bruker mindre minne
+     *
+     * Hvis slutt av intervall er LocalDate.MAX, er dagen etter ikke representerbar i LocalDate, derfor bruker denne klassen epochDay istedet
      */
-    private static class KnekkpunktIterator<V, T> implements Iterator<LocalDate> {
+    private static class KnekkpunktIterator<V, T> {
         private final Iterator<LocalDateSegment<V>> lhsIterator;
         private final Iterator<LocalDateSegment<T>> rhsIterator;
         private LocalDateSegment<V> lhsSegment;
         private LocalDateSegment<T> rhsSegment;
-        private LocalDate next;
+        private Long next;
 
         public KnekkpunktIterator(NavigableSet<LocalDateSegment<V>> lhsIntervaller, NavigableSet<LocalDateSegment<T>> rhsIntervaller) {
             lhsIterator = lhsIntervaller.iterator();
@@ -800,53 +799,57 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             lhsSegment = lhsIterator.hasNext() ? lhsIterator.next() : null;
             rhsSegment = rhsIterator.hasNext() ? rhsIterator.next() : null;
 
-            next = lhsSegment != null ? lhsSegment.getFom() : null;
-            if (rhsSegment != null && (next == null || rhsSegment.getFom().isBefore(next))) {
-                next = rhsSegment.getFom();
+            next = lhsSegment != null ? lhsSegment.getFom().toEpochDay() : null;
+            if (rhsSegment != null && (next == null || rhsSegment.getFom().toEpochDay() < next)) {
+                next = rhsSegment.getFom().toEpochDay();
             }
         }
 
-        @Override
-        public LocalDate next() {
+        public long nextEpochDay() {
             if (next == null) {
                 throw new NoSuchElementException("Ikke flere verdier igjen");
             }
-            LocalDate denne = next;
+            long denne = next;
             oppdaterNeste();
             return denne;
         }
 
-        @Override
         public boolean hasNext() {
             return next != null;
         }
 
         private void oppdaterNeste() {
-            while (lhsSegment != null && !lhsSegment.getTom().plusDays(1).isAfter(next)) {
-                lhsSegment = lhsIterator.hasNext() ? lhsIterator.next() : null;
-            }
-            while (rhsSegment != null && !rhsSegment.getTom().plusDays(1).isAfter(next)) {
-                rhsSegment = rhsIterator.hasNext() ? rhsIterator.next() : null;
-            }
+            spolUnderliggendeIteratorer();
 
-            LocalDate forrige = next;
+            Long forrige = next;
+            next = null;
             //neste knekkpunkt kan komme fra hvilken som helst av de to tidsseriene, må sjekke begge
-            next = oppdaterKandidatForNeste(forrige, null, lhsSegment);
-            next = oppdaterKandidatForNeste(forrige, next, rhsSegment);
+            oppdaterNeste(forrige, lhsSegment);
+            oppdaterNeste(forrige, rhsSegment);
         }
 
-        private static <X> LocalDate oppdaterKandidatForNeste(LocalDate forrige, LocalDate besteKandidat, LocalDateSegment<X> segment) {
-            if (segment != null) {
-                LocalDate fomKandidat = segment.getFom();
-                if (fomKandidat.isAfter(forrige) && (besteKandidat == null || fomKandidat.isBefore(besteKandidat))) {
-                    return fomKandidat;
-                }
-                LocalDate tomKandidat = segment.getTom().plusDays(1);
-                if (tomKandidat.isAfter(forrige) && (besteKandidat == null || tomKandidat.isBefore(besteKandidat))) {
-                    return tomKandidat;
+        private void spolUnderliggendeIteratorer() {
+            while (lhsSegment != null && lhsSegment.getTom().toEpochDay() < next) {
+                lhsSegment = lhsIterator.hasNext() ? lhsIterator.next() : null;
+            }
+            while (rhsSegment != null && rhsSegment.getTom().toEpochDay() < next) {
+                rhsSegment = rhsIterator.hasNext() ? rhsIterator.next() : null;
+            }
+        }
+
+        private <X> void oppdaterNeste(Long forrige, LocalDateSegment<X> segment) {
+            if (segment == null) {
+                return; //underliggende iterator er tømt
+            }
+            long fomKandidat = segment.getFom().toEpochDay();
+            if (fomKandidat > forrige && (next == null || fomKandidat < next)) {
+                next = fomKandidat;
+            } else {
+                long tomKandidat = segment.getTom().toEpochDay() + 1;
+                if (tomKandidat > forrige && (next == null || tomKandidat < next)) {
+                    next = tomKandidat;
                 }
             }
-            return besteKandidat;
         }
     }
 
