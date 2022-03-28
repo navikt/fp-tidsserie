@@ -17,24 +17,24 @@ import org.junit.jupiter.api.Test;
 
 import no.nav.fpsak.tidsserie.json.JsonTimelineFormatter;
 
-public class LocalDateTimelineTest {
+class LocalDateTimelineTest {
 
     LocalDate today = LocalDate.now();
 
     @Test
-    public void skal_opprette_kontinuerlig_tidslinje() throws Exception {
+    void skal_opprette_kontinuerlig_tidslinje() {
         LocalDateTimeline<String> tidslinje = basicContinuousTimeline();
         Assertions.assertThat(tidslinje.isContinuous()).isTrue();
     }
 
     @Test
-    public void skal_opprette_ikke_kontinuerlig_tidslinje() throws Exception {
+    void skal_opprette_ikke_kontinuerlig_tidslinje() {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
         Assertions.assertThat(tidslinje.isContinuous()).isFalse();
     }
 
     @Test
-    public void skal_ha_equal_tidslinje_når_intersecter_seg_selv() throws Exception {
+    void skal_ha_equal_tidslinje_når_intersecter_seg_selv() {
         LocalDateTimeline<String> continuousTimeline = basicContinuousTimeline();
         Assertions
                 .assertThat(continuousTimeline.intersection(continuousTimeline, StandardCombinators::coalesceLeftHandSide))
@@ -46,7 +46,7 @@ public class LocalDateTimelineTest {
     }
 
     @Test
-    public void skal_intersecte_annen_tidslinje() throws Exception {
+    void skal_intersecte_annen_tidslinje() {
 
         LocalDateTimeline<String> timeline = basicDiscontinuousTimeline();
 
@@ -66,7 +66,7 @@ public class LocalDateTimelineTest {
     }
 
     @Test
-    public void skal_cross_joine_annen_tidslinje() throws Exception {
+    void skal_cross_joine_annen_tidslinje() {
         LocalDateTimeline<String> timeline = basicDiscontinuousTimeline();
 
         LocalDate today = LocalDate.now();
@@ -89,14 +89,14 @@ public class LocalDateTimelineTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void skal_cross_joine_tom_tidsserie() throws Exception {
+    void skal_cross_joine_tom_tidsserie() {
         LocalDateTimeline<String> timeline = basicDiscontinuousTimeline();
         assertThat(timeline.crossJoin(LocalDateTimeline.EMPTY_TIMELINE)).isEqualTo(timeline);
         assertThat(LocalDateTimeline.EMPTY_TIMELINE.crossJoin(timeline)).isEqualTo(timeline);
     }
 
     @Test
-    public void skal_ha_empty_tidslinje_når_disjointer_seg_selv() throws Exception {
+    void skal_ha_empty_tidslinje_når_disjointer_seg_selv() {
         LocalDateTimeline<String> continuousTimeline = basicContinuousTimeline();
         Assertions.assertThat(continuousTimeline.disjoint(continuousTimeline, StandardCombinators::coalesceLeftHandSide))
                 .isEqualTo(LocalDateTimeline.EMPTY_TIMELINE);
@@ -109,14 +109,14 @@ public class LocalDateTimelineTest {
     }
 
     @Test
-    public void skal_formattere_timeline_som_json_output() throws Exception {
+    void skal_formattere_timeline_som_json_output() {
         LocalDateTimeline<String> timeline = basicContinuousTimeline();
         CharSequence json = new JsonTimelineFormatter().formatJson(timeline);
         assertThat(json).isNotNull().contains(LocalDate.now().toString());
     }
 
     @Test
-    public void skal_formattere_timeline_som_json_output_uten_verdier() throws Exception {
+    void skal_formattere_timeline_som_json_output_uten_verdier() {
         LocalDateTimeline<String> timeline = basicContinuousTimeline();
 
         CharSequence json = new JsonTimelineFormatter().formatJson(timeline);
@@ -127,7 +127,7 @@ public class LocalDateTimelineTest {
     }
 
     @Test
-    public void skal_compress_en_tidsserie_med_sammenhengende_intervaller_med_samme_verdi() throws Exception {
+    void skal_compress_en_tidsserie_med_sammenhengende_intervaller_med_samme_verdi() {
 
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(2);
@@ -152,7 +152,7 @@ public class LocalDateTimelineTest {
     }
 
     @Test
-    public void skal_ikke_compresse_en_tidsserie_uten_sammenhengende_intervaller_med_samme_verdi() throws Exception {
+    void skal_ikke_compresse_en_tidsserie_uten_sammenhengende_intervaller_med_samme_verdi() {
 
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(2);
@@ -175,7 +175,7 @@ public class LocalDateTimelineTest {
     }
 
     @Test
-    public void skal_gruppere_per_segment_periode() throws Exception {
+    void skal_gruppere_per_segment_periode() {
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(2);
         LocalDate d3 = d2.plusDays(1);
@@ -203,7 +203,7 @@ public class LocalDateTimelineTest {
     }
 
     @Test
-    public void skal_håndtere_overlapp_når_flere_perioder_overlapper_med_hverandre() {
+    void skal_håndtere_overlapp_når_flere_perioder_overlapper_med_hverandre() {
         Set<LocalDateSegment<Boolean>> segementer = new HashSet<>();
         LocalDateInterval førstePeriode = LocalDateInterval.withPeriodAfterDate(LocalDate.of(2015, 1, 1), Period.of(2, 0, 0));
         LocalDateInterval andrePeriode = LocalDateInterval.withPeriodAfterDate(LocalDate.of(2015, 1, 1), Period.of(2, 9, 29));
@@ -220,7 +220,7 @@ public class LocalDateTimelineTest {
     }
 
     @Test
-    public void skal_håndtere_overlapp_når_flere_perioder_overlapper_med_hverandre_2() {
+    void skal_håndtere_overlapp_når_flere_perioder_overlapper_med_hverandre_2() {
         Set<LocalDateSegment<Boolean>> segementer = new HashSet<>();
         LocalDateInterval førstePeriode = LocalDateInterval.withPeriodAfterDate(LocalDate.of(2015, 2, 1), Period.of(0, 1, 1));
         LocalDateInterval andrePeriode = LocalDateInterval.withPeriodAfterDate(LocalDate.of(2015, 4, 1), Period.of(0, 1, 1));
@@ -241,27 +241,27 @@ public class LocalDateTimelineTest {
     }
 
     @Test
-    public void skal_disjoint_samme_tidsserie() throws Exception {
+    void skal_disjoint_samme_tidsserie() {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
         Assertions.assertThat(tidslinje.disjoint(tidslinje)).isEmpty();
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void skal_disjoint_tom_tidsserie() throws Exception {
+    void skal_disjoint_tom_tidsserie() {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
         Assertions.assertThat(tidslinje.disjoint(LocalDateTimeline.EMPTY_TIMELINE)).isEqualTo(tidslinje);
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void skal_disjoint_med_tom_tidsserie() throws Exception {
+    void skal_disjoint_med_tom_tidsserie() {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
         Assertions.assertThat(LocalDateTimeline.EMPTY_TIMELINE.disjoint(tidslinje)).isEqualTo(LocalDateTimeline.EMPTY_TIMELINE);
     }
 
     @Test
-    public void skal_disjoint_med_annen_tidsserie() throws Exception {
+    void skal_disjoint_med_annen_tidsserie() {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
         var segments = tidslinje.toSegments();
         var segLast = segments.last();
@@ -275,9 +275,27 @@ public class LocalDateTimelineTest {
         Assertions.assertThat(tidslinje.disjoint(annenTidsserie)).isEqualTo(resultatTidsserie);
     }
 
+    @Test
+    void skal_håndtere_lengst_mulige_periode() {
+        LocalDateTimeline<String> tidslinjeA = new LocalDateTimeline<>(LocalDate.MIN, LocalDate.MAX, "A");
+        LocalDateTimeline<String> tidslinjeB = new LocalDateTimeline<>(LocalDate.MIN, LocalDate.MAX, "B");
+        LocalDateTimeline<String> tidslinjeAB = tidslinjeA.combine(tidslinjeB, StandardCombinators::concat, LocalDateTimeline.JoinStyle.INNER_JOIN);
+
+        assertThat(tidslinjeAB).isEqualTo(new LocalDateTimeline<>(LocalDate.MIN, LocalDate.MAX, "AB"));
+    }
+
+    @Test
+    void skal_håndtere_sendeste_mulige_dato() {
+        LocalDateTimeline<String> tidslinjeA = new LocalDateTimeline<>(LocalDate.MAX, LocalDate.MAX, "A");
+        LocalDateTimeline<String> tidslinjeB = new LocalDateTimeline<>(LocalDate.MAX, LocalDate.MAX, "B");
+        LocalDateTimeline<String> tidslinjeAB = tidslinjeA.combine(tidslinjeB, StandardCombinators::concat, LocalDateTimeline.JoinStyle.INNER_JOIN);
+
+        assertThat(tidslinjeAB).isEqualTo(new LocalDateTimeline<>(LocalDate.MAX, LocalDate.MAX, "AB"));
+    }
+
     @Disabled("Micro performance test - kun for spesielt interesserte! Kan brukes til å avsjekke forbedringer i join algoritme")
     @Test
-    public void kjapp_ytelse_test() throws Exception {
+    void kjapp_ytelse_test() {
 
         List<LocalDateSegment<String>> segmenter = new ArrayList<>();
 
