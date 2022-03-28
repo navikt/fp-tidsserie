@@ -21,7 +21,7 @@ F.eks. vil det automatisk holde rede på knekkpunkter, kunne kombinere tidsserie
 		<dependency>
 			<groupId>no.nav.fpsak.tidsserie</groupId>
 			<artifactId>fpsak-tidsserie</artifactId>
-			<version>2.3-20200427084950-396F346</version>
+			<version>2.6.2</version>
 		</dependency>
 ```
 
