@@ -239,6 +239,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         if (!startdatoIterator.hasNext()) {
             return empty(); //begge input-tidslinjer var tomme
         }
+
         LocalDate fom = startdatoIterator.next();
         while (startdatoIterator.hasNext()) {
             lhs = spolTil(lhs, lhsIterator, fom);
