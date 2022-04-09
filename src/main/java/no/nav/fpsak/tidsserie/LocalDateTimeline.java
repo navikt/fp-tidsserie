@@ -124,10 +124,10 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
                              SegmentSplitter<V> customSegmentSplitter) {
 
         Objects.requireNonNull(datoSegmenter, "datoSegmenter");
+        this.segmentSplitter = customSegmentSplitter != null ? customSegmentSplitter : new EqualValueSegmentSplitter<>();
         for (LocalDateSegment<V> ds : datoSegmenter) {
             add(ds, overlapCombinator);
         }
-        this.segmentSplitter = customSegmentSplitter != null ? customSegmentSplitter : new EqualValueSegmentSplitter<>();
         validateNonOverlapping();
     }
 
@@ -634,8 +634,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
                 && datoInterval.getTomDato().isAfter(this.getMinLocalDate().minusDays(1)));
     }
 
-    private void addWhenOverlap(LocalDateSegment<V> datoSegment, LocalDateSegmentCombinator<V, V, V> overlapCombinator,
-                                LocalDateInterval datoInterval) {
+    private void addWhenOverlap(LocalDateSegment<V> datoSegment, LocalDateSegmentCombinator<V, V, V> overlapCombinator, LocalDateInterval datoInterval) {
         List<LocalDateSegment<V>> newSegments = new ArrayList<>();
 
         for (LocalDateSegment<V> segEntry : segments) {
@@ -644,7 +643,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
 
                 // handle intervals which exist but do not overlap with new
                 segInterval.except(datoInterval)
-                        .forEach(di -> newSegments.add(new LocalDateSegment<>(di, segEntry.getValue())));
+                        .forEach(di -> newSegments.add(segmentSplitter.apply(di, segEntry)));
 
                 // handle gap in existing series when new has a value
                 handleGapInExistingTimeline(datoSegment, datoInterval, newSegments, segEntry);

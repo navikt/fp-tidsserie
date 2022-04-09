@@ -2,8 +2,10 @@ package no.nav.fpsak.tidsserie;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -11,7 +13,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -24,26 +25,90 @@ class LocalDateTimelineTest {
     @Test
     void skal_opprette_kontinuerlig_tidslinje() {
         LocalDateTimeline<String> tidslinje = basicContinuousTimeline();
-        Assertions.assertThat(tidslinje.isContinuous()).isTrue();
+        assertThat(tidslinje.isContinuous()).isTrue();
     }
 
     @Test
     void skal_opprette_ikke_kontinuerlig_tidslinje() {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
-        Assertions.assertThat(tidslinje.isContinuous()).isFalse();
+        assertThat(tidslinje.isContinuous()).isFalse();
     }
 
     @Test
     void skal_ha_equal_tidslinje_når_intersecter_seg_selv() {
         LocalDateTimeline<String> continuousTimeline = basicContinuousTimeline();
-        Assertions
-                .assertThat(continuousTimeline.intersection(continuousTimeline, StandardCombinators::coalesceLeftHandSide))
+        assertThat(continuousTimeline.intersection(continuousTimeline, StandardCombinators::coalesceLeftHandSide))
                 .isEqualTo(continuousTimeline);
 
         LocalDateTimeline<String> discontinuousTimeline = basicDiscontinuousTimeline();
         assertThat(discontinuousTimeline.intersection(discontinuousTimeline, StandardCombinators::coalesceLeftHandSide))
                 .isEqualTo(discontinuousTimeline);
     }
+
+    @Test
+    void skal_kunne_tilpasse_compress_med_custom_combiner_og_sammenslåingssjekk() {
+        //tidslinje hvor verdi er totalverdi for perioden
+        //i eksempelet er det dagsats 1 hele uka, bortsett fra en dag midt i uka, og der er det 3
+
+        LocalDateTimeline<Integer> bygdFraEnkeltdager = new LocalDateTimeline<>(List.of(
+                new LocalDateSegment<>(today.plusDays(1), today.plusDays(1), 1),
+                new LocalDateSegment<>(today.plusDays(2), today.plusDays(2), 1),
+                new LocalDateSegment<>(today.plusDays(3), today.plusDays(3), 3),
+                new LocalDateSegment<>(today.plusDays(4), today.plusDays(4), 1),
+                new LocalDateSegment<>(today.plusDays(5), today.plusDays(5), 1))
+        );
+        LocalDateTimeline<Integer> komprimert = bygdFraEnkeltdager.compress((a, b) -> true, this::summerVerdier);
+        assertThat(komprimert).isEqualTo(new LocalDateTimeline<>(List.of(
+                new LocalDateSegment<>(today.plusDays(1), today.plusDays(5), 7))
+        ));
+    }
+
+    @Test
+    void skal_bruke_custom_segment_splitter_og_combiner_når_angitt_på_overlappende_segmenter_i_konstruktør() {
+        //tidslinje hvor verdi er totalverdi for perioden
+        //i eksempelet er det dagsats 1 hele uka, bortsett fra en dag midt i uka, og der er det 3
+        LocalDateTimeline<Integer> bygdMedSplitting = new LocalDateTimeline<>(List.of(
+                new LocalDateSegment<>(today.plusDays(1), today.plusDays(5), 5), //1 for hver dag
+                new LocalDateSegment<>(today.plusDays(3), today.plusDays(3), 2)),//2 ekstra for dag 3
+                this::summerVerdier,
+                new BeholdSammeGjennomsnittForPeriodenSegmentSplitter()
+        );
+        assertThat(bygdMedSplitting).isEqualTo(new LocalDateTimeline<>(List.of(
+                new LocalDateSegment<>(today.plusDays(1), today.plusDays(2), 2),
+                new LocalDateSegment<>(today.plusDays(3), today.plusDays(3), 3),
+                new LocalDateSegment<>(today.plusDays(4), today.plusDays(5), 2))
+        ));
+    }
+
+    private LocalDateSegment<Integer> summerVerdier(LocalDateInterval dateInterval,
+                                                   LocalDateSegment<Integer> lhs,
+                                                   LocalDateSegment<Integer> rhs) {
+        long lhsBidrag = 0;
+        long rhsBidrag = 0;
+        if (lhs != null) {
+            long lhsOverlappDager = dateInterval.overlap(lhs.getLocalDateInterval()).orElseThrow().days();
+            long lhsDays = lhs.getLocalDateInterval().days();
+            lhsBidrag = (lhs.getValue() * lhsOverlappDager) / lhsDays;
+        }
+        if (rhs != null) {
+            long rhsOverlappDager = dateInterval.overlap(rhs.getLocalDateInterval()).orElseThrow().days();
+            long rhsDays = rhs.getLocalDateInterval().days();
+            rhsBidrag = (rhs.getValue() * rhsOverlappDager) / rhsDays;
+        }
+        return new LocalDateSegment<>(dateInterval, (int) (lhsBidrag + rhsBidrag));
+    }
+
+    private static final class BeholdSammeGjennomsnittForPeriodenSegmentSplitter implements LocalDateTimeline.SegmentSplitter<Integer>, Serializable {
+        @Override
+        public LocalDateSegment<Integer> apply(LocalDateInterval di, LocalDateSegment<Integer> seg) {
+            long dagerISegment = (int) (ChronoUnit.DAYS.between(seg.getFom(), seg.getTom()) + 1);
+            long dagerINyttSegment = (int) (ChronoUnit.DAYS.between(di.getFomDato(), di.getTomDato()) + 1);
+            long verdi = seg.getValue();
+            long nyVerdi = verdi * dagerINyttSegment / dagerISegment;
+            return new LocalDateSegment<>(di, (int) nyVerdi);
+        }
+    }
+
 
     @Test
     void skal_intersecte_annen_tidslinje() {
@@ -98,13 +163,12 @@ class LocalDateTimelineTest {
     @Test
     void skal_ha_empty_tidslinje_når_disjointer_seg_selv() {
         LocalDateTimeline<String> continuousTimeline = basicContinuousTimeline();
-        Assertions.assertThat(continuousTimeline.disjoint(continuousTimeline, StandardCombinators::coalesceLeftHandSide))
+        assertThat(continuousTimeline.disjoint(continuousTimeline, StandardCombinators::coalesceLeftHandSide))
                 .isEqualTo(LocalDateTimeline.EMPTY_TIMELINE);
 
         LocalDateTimeline<String> discontinuousTimeline = basicDiscontinuousTimeline();
-        Assertions
-                .assertThat(discontinuousTimeline.intersection(discontinuousTimeline,
-                        StandardCombinators::coalesceLeftHandSide))
+        assertThat(discontinuousTimeline.intersection(discontinuousTimeline,
+                StandardCombinators::coalesceLeftHandSide))
                 .isEqualTo(discontinuousTimeline);
     }
 
@@ -243,21 +307,21 @@ class LocalDateTimelineTest {
     @Test
     void skal_disjoint_samme_tidsserie() {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
-        Assertions.assertThat(tidslinje.disjoint(tidslinje)).isEmpty();
+        assertThat(tidslinje.disjoint(tidslinje)).isEmpty();
     }
 
     @SuppressWarnings("unchecked")
     @Test
     void skal_disjoint_tom_tidsserie() {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
-        Assertions.assertThat(tidslinje.disjoint(LocalDateTimeline.EMPTY_TIMELINE)).isEqualTo(tidslinje);
+        assertThat(tidslinje.disjoint(LocalDateTimeline.EMPTY_TIMELINE)).isEqualTo(tidslinje);
     }
 
     @SuppressWarnings("unchecked")
     @Test
     void skal_disjoint_med_tom_tidsserie() {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
-        Assertions.assertThat(LocalDateTimeline.EMPTY_TIMELINE.disjoint(tidslinje)).isEqualTo(LocalDateTimeline.EMPTY_TIMELINE);
+        assertThat(LocalDateTimeline.EMPTY_TIMELINE.disjoint(tidslinje)).isEqualTo(LocalDateTimeline.EMPTY_TIMELINE);
     }
 
     @Test
@@ -272,7 +336,7 @@ class LocalDateTimelineTest {
         segmentsUtenAnnen.remove(segLast);
         var resultatTidsserie = new LocalDateTimeline<>(segmentsUtenAnnen);
 
-        Assertions.assertThat(tidslinje.disjoint(annenTidsserie)).isEqualTo(resultatTidsserie);
+        assertThat(tidslinje.disjoint(annenTidsserie)).isEqualTo(resultatTidsserie);
     }
 
     @Test
