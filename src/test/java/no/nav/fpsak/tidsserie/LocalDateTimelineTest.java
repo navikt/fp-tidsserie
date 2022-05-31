@@ -26,12 +26,19 @@ class LocalDateTimelineTest {
     void skal_opprette_kontinuerlig_tidslinje() {
         LocalDateTimeline<String> tidslinje = basicContinuousTimeline();
         assertThat(tidslinje.isContinuous()).isTrue();
+        assertThat(tidslinje.firstDiscontinuity()).isNull();
     }
 
     @Test
     void skal_opprette_ikke_kontinuerlig_tidslinje() {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
         assertThat(tidslinje.isContinuous()).isFalse();
+        var firstDiscontinuedInterval = tidslinje.firstDiscontinuity();
+        assertThat(firstDiscontinuedInterval).isNotNull();
+        // tidslinje = Timeline of two intervals A,C. Verify that full timeline A,B,C - A,C = B = discontinuity
+        var continuousTimeline = new LocalDateTimeline<>(tidslinje.getMinLocalDate(), tidslinje.getMaxLocalDate(), "hello world");
+        assertThat(continuousTimeline.disjoint(tidslinje).getLocalDateIntervals().stream().findFirst().orElseThrow()).isEqualTo(firstDiscontinuedInterval);
+
     }
 
     @Test

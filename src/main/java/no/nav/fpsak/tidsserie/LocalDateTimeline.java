@@ -476,23 +476,32 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
     /**
      * Whether this timeline is continuous and not empty for its entire interval.
      *
-     * @return true if continuous and not empty for whole matchInterval
+     * @return true if continuous
      */
     public boolean isContinuous() {
+        return firstDiscontinuity() == null;
+    }
+
+    /**
+     * Return the first interval, if any, not covered by the timeline. Utility when full disjoint is not needed
+     *
+     * @return null if continuous, first interval
+     */
+    public LocalDateInterval firstDiscontinuity() {
         if (segments.size() == 1) {
-            return true;
+            return null;
         }
 
         LocalDateInterval lastInterval = null;
         for (LocalDateSegment<V> entry : segments) {
             if (lastInterval != null) {
                 if (!lastInterval.abuts(entry.getLocalDateInterval())) {
-                    return false;
+                    return new LocalDateInterval(lastInterval.getTomDato().plusDays(1), entry.getLocalDateInterval().getFomDato().minusDays(1));
                 }
             }
             lastInterval = entry.getLocalDateInterval();
         }
-        return true;
+        return null;
     }
 
     /**
