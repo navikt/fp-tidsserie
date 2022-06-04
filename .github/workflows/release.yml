@@ -16,6 +16,13 @@ jobs:
       - name: Checkout latest code
         uses: actions/checkout@v3
 
+      - name: Setup maven
+        uses: whelk-io/maven-settings-xml-action@v20
+        with:
+          repositories: '[{ "id": "github", "name": "github", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" } }]'
+          servers: '[{ "id": "github", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}" }]'
+          output_file: settings.xml
+
       - name: Set up JDK
         uses: actions/setup-java@v3.3.0
         with:
@@ -25,10 +32,7 @@ jobs:
       - name: Publish artifact
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # The GITHUB_REF tag comes in the format 'refs/tags/xxx'.
-        # So if we split on '/' and take the 3rd value, we can get the release name.
+          NEW_VERSION: ${{ github.event.release.tag_name }}
         run: |
-          REPO_NAME=$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}')
-          NEW_VERSION=$(echo "${GITHUB_REF}" | cut -d "/" -f3)
-          mvn -B versions:set -DnewVersion="${NEW_VERSION}" -DgenerateBackupPoms=false
-          mvn -B clean deploy -DtrimStackTrace=false
+          mvn -B -s settings.xml versions:set -DnewVersion="${NEW_VERSION}" -DgenerateBackupPoms=false
+          mvn -B -s settings.xml clean deploy 

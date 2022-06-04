@@ -23,10 +23,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Setup maven
+        uses: whelk-io/maven-settings-xml-action@v20
         with:
-          # We must fetch at least the immediate parents so that if this is
-          # a pull request then we can checkout the head.
-          fetch-depth: 2
+          repositories: '[{ "id": "github", "name": "github", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" } }]'
+          servers: '[{ "id": "github", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}" }]'
+          output_file: settings.xml
 
         # If this run was triggered by a pull request event, then checkout
         # the head of the pull request instead of the merge commit.
@@ -50,7 +53,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          mvn clean package -B -V -e -Dfindbugs.skip -Dcheckstyle.skip -Dpmd.skip=true -Denforcer.skip -Dmaven.javadoc.skip -DskipTests -Dmaven.test.skip.exec -Dlicense.skip=true -Drat.skip=true
+          mvn clean package -B -V -e -s settings.xml -Dfindbugs.skip -Dcheckstyle.skip -Dpmd.skip=true -Denforcer.skip -Dmaven.javadoc.skip -DskipTests -Dmaven.test.skip.exec -Dlicense.skip=true -Drat.skip=true
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
