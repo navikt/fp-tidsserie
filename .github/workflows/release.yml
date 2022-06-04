@@ -16,6 +16,13 @@ jobs:
       - name: Checkout latest code
         uses: actions/checkout@v3
 
+      - name: Setup maven
+        uses: whelk-io/maven-settings-xml-action@v20
+        with:
+          repositories: '[{ "id": "github", "name": "github", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" } }]'
+          servers: '[{ "id": "github", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}" }]'
+          output_file: settings.xml
+
       - name: Set up JDK
         uses: actions/setup-java@v3.3.0
         with:
@@ -27,5 +34,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEW_VERSION: ${{ github.event.release.tag_name }}
         run: |
-          mvn -B versions:set -DnewVersion="${NEW_VERSION}" -DgenerateBackupPoms=false
-          mvn -B clean deploy 
+          mvn -B -s settings.xml versions:set -DnewVersion="${NEW_VERSION}" -DgenerateBackupPoms=false
+          mvn -B -s settings.xml clean deploy 

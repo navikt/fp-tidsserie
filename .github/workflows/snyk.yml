@@ -9,6 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Setup maven
+        uses: whelk-io/maven-settings-xml-action@v20
+        with:
+          repositories: '[{ "id": "github", "name": "github", "url": "https://maven.pkg.github.com/${{ github.repository }}", "releases": { "enabled": "true" }, "snapshots": { "enabled": "false" } }]'
+          servers: '[{ "id": "github", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}" }]'
+          output_file: settings.xml
+
       - uses: actions/setup-java@v3
         with:
           java-version: 17
@@ -29,5 +37,6 @@ jobs:
           --all-projects
           --configuration-attributes=usage:java-runtime
           --remote-repo-url=https://github.com/${{ github.repository }}.git
+          -- -s settings.xml
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
