@@ -1,6 +1,6 @@
 name: Bygg pull request
 
-on: 
+on:
   pull_request:
     paths-ignore:
       - '**.md'
@@ -8,7 +8,7 @@ on:
       - '.gitignore'
       - 'LICENCE'
       - 'CODEOWNERS'
-      
+
 jobs:
   build:
 
@@ -25,8 +25,8 @@ jobs:
         shell: bash
         run: |
           echo "Building $(echo $GITHUB_SHA | cut -c1-7)"
-          mvn package -e --batch-mode --file pom.xml -DtrimStackTrace=false
+          mvn package -e -B -DtrimStackTrace=false
         env:
           GITHUB_USERNAME: x-access-token
           GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-         
+

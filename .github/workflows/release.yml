@@ -25,10 +25,7 @@ jobs:
       - name: Publish artifact
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # The GITHUB_REF tag comes in the format 'refs/tags/xxx'.
-        # So if we split on '/' and take the 3rd value, we can get the release name.
+          NEW_VERSION: ${{ github.event.release.tag_name }}
         run: |
-          REPO_NAME=$(echo "$GITHUB_REPOSITORY" | awk -F / '{print $2}')
-          NEW_VERSION=$(echo "${GITHUB_REF}" | cut -d "/" -f3)
           mvn -B versions:set -DnewVersion="${NEW_VERSION}" -DgenerateBackupPoms=false
-          mvn -B clean deploy -DtrimStackTrace=false
+          mvn -B clean deploy 

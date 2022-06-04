@@ -1,0 +1,33 @@
+name: Snyk vulnerabilities scanning of dependencies
+on:
+  schedule:
+    - cron:  '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  snyk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: temurin
+
+      - uses: snyk/actions/setup@master
+
+      - name: Build
+        run: |
+          echo "Building snyk-snapshot"
+          mvn -B -s settings.xml versions:set -DnewVersion=snyk-snapshot
+          mvn install -q -B -DskipTests
+
+      - name: Run Snyk monitor
+        run: >
+          snyk monitor
+          --org=teamforeldrepenger
+          --all-projects
+          --configuration-attributes=usage:java-runtime
+          --remote-repo-url=https://github.com/${{ github.repository }}.git
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

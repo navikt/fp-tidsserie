@@ -26,9 +26,8 @@ jobs:
       - name: Build artifacts & deploy
         shell: bash
         run: |
-          mvn jacoco:prepare-agent install -e --batch-mode --file pom.xml -DtrimStackTrace=false -Dfile.encoding=UTF-8 -Djacoco.destFile=$(pwd)/target/jacoco.exec
-          # mvn jacoco:report sonar:sonar -e --batch-mode --file pom.xml -Djacoco.dataFile=$(pwd)/target/jacoco.exec -Dsonar.projectKey="navikt_fp-tidsserie" -Dsonar.host.url='https://sonarcloud.io' -Dsonar.organization=navikt -Dsonar.login=${SONAR_TOKEN} -Dsonar.exclusions="pom.xml,**/src/test/**/*"
-
+          mvn jacoco:prepare-agent install -e -B -Djacoco.destFile=$(pwd)/target/jacoco.exec
+          mvn jacoco:report sonar:sonar -e -B -Djacoco.dataFile=$(pwd)/target/jacoco.exec -Dsonar.exclusions="pom.xml,**/src/test/**/*"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
