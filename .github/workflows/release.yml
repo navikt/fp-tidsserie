@@ -24,7 +24,7 @@ jobs:
           output_file: settings.xml
 
       - name: Set up JDK
-        uses: actions/setup-java@v3.3.0
+        uses: actions/setup-java@v3.4.1
         with:
           java-version: '17'
           distribution: 'temurin'
