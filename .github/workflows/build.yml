@@ -35,7 +35,7 @@ jobs:
         shell: bash
         run: |
           mvn jacoco:prepare-agent install -e -B -s settings.xml -Djacoco.destFile=$(pwd)/target/jacoco.exec
-          mvn jacoco:report sonar:sonar -e -B -s settings.xml -Djacoco.dataFile=$(pwd)/target/jacoco.exec -Dsonar.exclusions="pom.xml,**/src/test/**/*"
+          mvn jacoco:report -e -B -s settings.xml -Djacoco.dataFile=$(pwd)/target/jacoco.exec -Dsonar.exclusions="pom.xml,**/src/test/**/*"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
