@@ -57,8 +57,7 @@ public class StandardCombinators {
      * Basic combinator som alltid returnerer Boolean.TRUE for angitt interval. Greit å bruke når verdi ikke betyr
      * noe, kun intervaller. Merk hvilket intervall som benyttes avhenger av {@link JoinStyle} og "includeGaps". Alle som passer får True.
      */
-    public static LocalDateSegment<Boolean> alwaysTrueForMatch(
-                                                               LocalDateInterval dateInterval,
+    public static LocalDateSegment<Boolean> alwaysTrueForMatch(LocalDateInterval dateInterval,
                                                                @SuppressWarnings("unused") LocalDateSegment<?> lhs, // NOSONAR
                                                                @SuppressWarnings("unused") LocalDateSegment<?> rhs // NOSONAR
     ) {
@@ -76,6 +75,14 @@ public class StandardCombinators {
         } else {
             return new LocalDateSegment<>(dateInterval, Collections.singletonList(Objects.requireNonNullElse(lhs, rhs).getValue()));
         }
+    }
+
+    /** Basic combinator som returnerer første (Left-Hand Side) verdi hvis begge finnes og er like. */
+    public static <V> LocalDateSegment<V> leftIfEqualsRight(LocalDateInterval dateInterval,
+                                                            LocalDateSegment<V> lhs,
+                                                            LocalDateSegment<V> rhs) {
+        return lhs != null && rhs != null && Objects.equals(lhs.getValue(), rhs.getValue()) ?
+            new LocalDateSegment<>(dateInterval, lhs.getValue()) : null;
     }
 
     /** Basic combinator som alltid returnerer verdi fra første (Left-Hand Side) timeline hvis finnes, ellers andre. */
@@ -136,6 +143,33 @@ public class StandardCombinators {
         String rv = rhs == null ? null : rhs.getValue();
         return new LocalDateSegment<>(dateInterval, (lv == null ? "" : lv) + (rv == null ? "" : rv));
     }
+
+    /**
+     * Basic combinator som tar minste verdi, evt lhs dersom like
+     */
+    public static <V extends Comparable<? super V>> LocalDateSegment<V> min(LocalDateInterval dateInterval,
+                                                                            LocalDateSegment<V> lhs,
+                                                                            LocalDateSegment<V> rhs) {
+        if (lhs != null && rhs != null) {
+            var least = lhs.getValue().compareTo(rhs.getValue()) <= 0 ? lhs.getValue() : rhs.getValue();
+            return new LocalDateSegment<>(dateInterval, least);
+        }
+        return lhs == null ? new LocalDateSegment<>(dateInterval, rhs.getValue()) : new LocalDateSegment<>(dateInterval, lhs.getValue());
+    }
+
+    /**
+     * Basic combinator som tar største verdi, evt lhs dersom like
+     */
+    public static <V extends Comparable<? super V>> LocalDateSegment<V> max(LocalDateInterval dateInterval,
+                                                                            LocalDateSegment<V> lhs,
+                                                                            LocalDateSegment<V> rhs) {
+        if (lhs != null && rhs != null) {
+            var greatest = lhs.getValue().compareTo(rhs.getValue()) >= 0 ? lhs.getValue() : rhs.getValue();
+            return new LocalDateSegment<>(dateInterval, greatest);
+        }
+        return lhs == null ? new LocalDateSegment<>(dateInterval, rhs.getValue()) : new LocalDateSegment<>(dateInterval, lhs.getValue());
+    }
+
 
     @SuppressWarnings("unchecked")
     private static <L extends Number, R extends Number> L sum(L lhs, R rhs) {
