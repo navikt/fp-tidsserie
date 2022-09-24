@@ -174,9 +174,9 @@ public class StandardCombinators {
     /**
      * Basic combinator som slår sammen Liste-verdier til en liste
      */
-    public static <V> LocalDateSegment<List<V>> concatToList(LocalDateInterval dateInterval,
-                                                             LocalDateSegment<List<V>> lhs,
-                                                             LocalDateSegment<List<V>> rhs) {
+    public static <V> LocalDateSegment<List<V>> concatLists(LocalDateInterval dateInterval,
+                                                            LocalDateSegment<List<V>> lhs,
+                                                            LocalDateSegment<List<V>> rhs) {
         if (lhs != null && rhs != null) {
             return new LocalDateSegment<>(dateInterval, Stream.concat(lhs.getValue().stream(), rhs.getValue().stream()).toList());
         } else if (lhs == null && rhs == null) {
