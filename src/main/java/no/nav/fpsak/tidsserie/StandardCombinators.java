@@ -6,9 +6,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import no.nav.fpsak.tidsserie.LocalDateTimeline.JoinStyle;
@@ -171,6 +174,52 @@ public class StandardCombinators {
                                                             LocalDateSegment<List<V>> rhs) {
         if (lhs != null && rhs != null) {
             return new LocalDateSegment<>(dateInterval, Stream.concat(lhs.getValue().stream(), rhs.getValue().stream()).toList());
+        } else if (lhs == null && rhs == null) {
+            return null;
+        }
+        return lhs == null ? new LocalDateSegment<>(dateInterval, rhs.getValue()) : new LocalDateSegment<>(dateInterval, lhs.getValue());
+    }
+
+    /**
+     * Basic combinator som slår sammen to Sets vha Union
+     */
+    public static <V> LocalDateSegment<Set<V>> union(LocalDateInterval dateInterval,
+                                                     LocalDateSegment<Set<V>> lhs,
+                                                     LocalDateSegment<Set<V>> rhs) {
+        if (lhs != null && rhs != null) {
+            var union = new HashSet<>(lhs.getValue());
+            union.addAll(rhs.getValue());
+            return new LocalDateSegment<>(dateInterval, union);
+        } else if (lhs == null && rhs == null) {
+            return null;
+        }
+        return lhs == null ? new LocalDateSegment<>(dateInterval, rhs.getValue()) : new LocalDateSegment<>(dateInterval, lhs.getValue());
+    }
+
+    /**
+     * Basic combinator som slår sammen to Sets vha Intersection
+     */
+    public static <V> LocalDateSegment<Set<V>> intersection(LocalDateInterval dateInterval,
+                                                            LocalDateSegment<Set<V>> lhs,
+                                                            LocalDateSegment<Set<V>> rhs) {
+        if (lhs != null && rhs != null) {
+            var intersection = lhs.getValue().stream().filter(v -> rhs.getValue().contains(v)).collect(Collectors.toCollection(HashSet::new));
+            return new LocalDateSegment<>(dateInterval, intersection);
+        } else if (lhs == null && rhs == null) {
+            return null;
+        }
+        return lhs == null ? new LocalDateSegment<>(dateInterval, rhs.getValue()) : new LocalDateSegment<>(dateInterval, lhs.getValue());
+    }
+
+    /**
+     * Basic combinator som slår sammen to Sets vha Intersection
+     */
+    public static <V> LocalDateSegment<Set<V>> difference(LocalDateInterval dateInterval,
+                                                          LocalDateSegment<Set<V>> lhs,
+                                                          LocalDateSegment<Set<V>> rhs) {
+        if (lhs != null && rhs != null) {
+            var intersection = lhs.getValue().stream().filter(v -> !rhs.getValue().contains(v)).collect(Collectors.toCollection(HashSet::new));
+            return new LocalDateSegment<>(dateInterval, intersection);
         } else if (lhs == null && rhs == null) {
             return null;
         }

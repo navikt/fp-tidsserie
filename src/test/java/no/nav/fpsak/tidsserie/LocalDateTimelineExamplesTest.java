@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -503,6 +504,33 @@ public class LocalDateTimelineExamplesTest {
                 toSegment("2020-02-17", "2020-02-29", senereDato),
                 toSegment("2020-04-01", "2020-04-30", tidligDato),
                 toSegment("2020-05-01", "2020-06-01", senereDato)));
+
+        assertThat(timelineBMin).isEqualTo(expectedTimeline);
+    }
+
+    @Test
+    public void set_difference() {
+
+        var timelineA = new LocalDateTimeline<Set<Integer>>(
+            List.of(
+                toSegment("2019-12-01", "2020-01-02", Set.of(1,2,3)),
+                toSegment("2020-02-03", "2020-02-16", Set.of(1,2,3,4,5,6)),
+                toSegment("2020-03-01", "2020-04-30", Set.of(1,2,3,4,5,6,7,8,9))));
+
+        var timelineB = new LocalDateTimeline<Set<Integer>>(
+            List.of(
+                toSegment("2019-12-01", "2020-01-02", Set.of()),
+                toSegment("2020-02-03", "2020-02-29", Set.of(1,2,3)),
+                toSegment("2020-04-01", "2020-06-01", Set.of(1,2,3,4,5,6))));
+
+        var timelineBMin = timelineA.combine(timelineB, StandardCombinators::difference, JoinStyle.LEFT_JOIN);
+
+        var expectedTimeline = new LocalDateTimeline<Set<Integer>>(
+            List.of(
+                toSegment("2019-12-01", "2020-01-02", Set.of(1,2,3)),
+                toSegment("2020-02-03", "2020-02-16", Set.of(4,5,6)),
+                toSegment("2020-03-01", "2020-03-31", Set.of(1,2,3,4,5,6,7,8,9)),
+                toSegment("2020-04-01", "2020-04-30", Set.of(7,8,9))));
 
         assertThat(timelineBMin).isEqualTo(expectedTimeline);
     }
