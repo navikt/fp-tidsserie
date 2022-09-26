@@ -212,14 +212,14 @@ public class StandardCombinators {
     }
 
     /**
-     * Basic combinator som slår sammen to Sets vha Difference (A-B)
+     * Basic combinator som slår sammen to Sets vha Difference (LHS-RHS)
      */
     public static <V> LocalDateSegment<Set<V>> difference(LocalDateInterval dateInterval,
                                                           LocalDateSegment<Set<V>> lhs,
                                                           LocalDateSegment<Set<V>> rhs) {
         if (lhs != null && rhs != null) {
-            var intersection = lhs.getValue().stream().filter(v -> !rhs.getValue().contains(v)).collect(Collectors.toCollection(HashSet::new));
-            return new LocalDateSegment<>(dateInterval, intersection);
+            var difference = lhs.getValue().stream().filter(v -> !rhs.getValue().contains(v)).collect(Collectors.toCollection(HashSet::new));
+            return new LocalDateSegment<>(dateInterval, difference);
         } else if (lhs == null && rhs == null) {
             return null;
         }
