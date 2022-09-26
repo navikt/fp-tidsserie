@@ -212,7 +212,7 @@ public class StandardCombinators {
     }
 
     /**
-     * Basic combinator som slår sammen to Sets vha Intersection
+     * Basic combinator som slår sammen to Sets vha Difference (A-B)
      */
     public static <V> LocalDateSegment<Set<V>> difference(LocalDateInterval dateInterval,
                                                           LocalDateSegment<Set<V>> lhs,
