@@ -78,14 +78,6 @@ public class StandardCombinators {
         }
     }
 
-    /** Basic combinator som returnerer første (Left-Hand Side) verdi hvis begge finnes og er like. */
-    public static <V> LocalDateSegment<V> leftIfEqualsRight(LocalDateInterval dateInterval,
-                                                            LocalDateSegment<V> lhs,
-                                                            LocalDateSegment<V> rhs) {
-        return lhs != null && rhs != null && Objects.equals(lhs.getValue(), rhs.getValue()) ?
-            new LocalDateSegment<>(dateInterval, lhs.getValue()) : null;
-    }
-
     /** Basic combinator som alltid returnerer verdi fra første (Left-Hand Side) timeline hvis finnes, ellers andre. */
     public static <V> LocalDateSegment<V> coalesceLeftHandSide(LocalDateInterval dateInterval,
                                                                LocalDateSegment<V> lhs, LocalDateSegment<V> rhs) {

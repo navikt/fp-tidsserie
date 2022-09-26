@@ -507,42 +507,6 @@ public class LocalDateTimelineExamplesTest {
         assertThat(timelineBMin).isEqualTo(expectedTimeline);
     }
 
-    @Test
-    public void likhets_inner_join_test() {
-
-        var tidlig = new ForEqualsTest("type1", LocalDate.of(2019,11,15));
-        var senere = new ForEqualsTest("type1", LocalDate.of(2020,6,1));
-        var annentype = new ForEqualsTest("type2", LocalDate.of(2020,6,1));
-
-        var timelineA = new LocalDateTimeline<>(
-            List.of(
-                toSegment("2019-12-01", "2020-01-02", tidlig),
-                toSegment("2020-02-03", "2020-02-16", tidlig),
-                toSegment("2020-03-01", "2020-04-30", tidlig)));
-
-        var timelineB = new LocalDateTimeline<>(
-            List.of(
-                toSegment("2019-12-01", "2020-01-02", tidlig),
-                toSegment("2020-02-03", "2020-02-29", annentype),
-                toSegment("2020-04-01", "2020-06-01", senere)));
-
-        var kombinert = timelineB.combine(timelineA, StandardCombinators::leftIfEqualsRight, JoinStyle.INNER_JOIN);
-
-        var expectedTimeline = new LocalDateTimeline<>(
-            List.of(
-                toSegment("2019-12-01", "2020-01-02", tidlig),
-                toSegment("2020-04-01", "2020-04-30", senere)));
-
-        assertThat(kombinert).isEqualTo(expectedTimeline);
-    }
-
-    private record ForEqualsTest(String type, LocalDate dato) {
-        @Override
-        public boolean equals(Object o) {
-            return this == o || o instanceof ForEqualsTest that && Objects.equals(type, that.type);
-        }
-    }
-
     private static <V> LocalDateSegment<V> toSegment(String dt1, String dt2, V val) {
         return new LocalDateSegment<>(LocalDate.parse(dt1), LocalDate.parse(dt2), val);
     }
