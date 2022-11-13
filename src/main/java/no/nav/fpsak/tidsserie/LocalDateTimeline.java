@@ -276,7 +276,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * for å 'redusere' tidslinjen ned til enkleste form før lagring etc.
      */
     public LocalDateTimeline<V> compress() {
-        var factory = new CompressorFactory<V>(Objects::equals, (i, lhs, rhs) -> new LocalDateSegment<>(i, lhs.getValue()));
+        var factory = new CompressorFactory<V>(LocalDateInterval::abuts, Objects::equals, StandardCombinators::leftOnly);
         TimelineCompressor<V> compressor = segments.stream()
                 .collect(factory::get, TimelineCompressor::accept, TimelineCompressor::combine);
 
@@ -290,9 +290,24 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * @param c - combinator for å slå sammen to tids-abut-segmenter som oppfyller e
      */
     public LocalDateTimeline<V> compress(BiPredicate<V, V> e, LocalDateSegmentCombinator<V, V, V> c) {
-        var factory = new CompressorFactory<>(e, c);
+        var factory = new CompressorFactory<>(LocalDateInterval::abuts, e, c);
         TimelineCompressor<V> compressor = segments.stream()
                 .collect(factory::get, TimelineCompressor::accept, TimelineCompressor::combine);
+
+        return new LocalDateTimeline<>(compressor.segmenter);
+    }
+
+    /**
+     * Fikser opp tidslinjen ved å slå sammen sammenhengende intervall med "like" verider utover periode.
+     *
+     * @param a - predikat for å vurdere om to intervaller ligger inntil hverandre (helg og helligdag)
+     * @param e - likhetspredikat for å sammenligne to segment som vurderes slått sammen
+     * @param c - combinator for å slå sammen to tids-abut-segmenter som oppfyller e
+     */
+    public LocalDateTimeline<V> compress(BiPredicate<LocalDateInterval, LocalDateInterval> a, BiPredicate<V, V> e, LocalDateSegmentCombinator<V, V, V> c) {
+        var factory = new CompressorFactory<>(a, e, c);
+        TimelineCompressor<V> compressor = segments.stream()
+            .collect(factory::get, TimelineCompressor::accept, TimelineCompressor::combine);
 
         return new LocalDateTimeline<>(compressor.segmenter);
     }
@@ -479,7 +494,11 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * @return true if continuous
      */
     public boolean isContinuous() {
-        return firstDiscontinuity() == null;
+        return isContinuous(LocalDateInterval::abuts);
+    }
+
+    public boolean isContinuous(BiPredicate<LocalDateInterval, LocalDateInterval> abuts) {
+        return firstDiscontinuity(abuts) == null;
     }
 
     /**
@@ -488,6 +507,10 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * @return null if continuous, first interval
      */
     public LocalDateInterval firstDiscontinuity() {
+        return firstDiscontinuity(LocalDateInterval::abuts);
+    }
+
+    public LocalDateInterval firstDiscontinuity(BiPredicate<LocalDateInterval, LocalDateInterval> abuts) {
         if (segments.size() == 1) {
             return null;
         }
@@ -495,7 +518,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         LocalDateInterval lastInterval = null;
         for (LocalDateSegment<V> entry : segments) {
             if (lastInterval != null) {
-                if (!lastInterval.abuts(entry.getLocalDateInterval())) {
+                if (!abuts.test(lastInterval, entry.getLocalDateInterval())) {
                     return new LocalDateInterval(lastInterval.getTomDato().plusDays(1), entry.getLocalDateInterval().getFomDato().minusDays(1));
                 }
             }
@@ -981,10 +1004,12 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
     static class TimelineCompressor<V> implements Consumer<LocalDateSegment<V>> {
 
         private final NavigableSet<LocalDateSegment<V>> segmenter = new TreeSet<>();
+        private final BiPredicate<LocalDateInterval, LocalDateInterval> abuts;
         private final BiPredicate<V, V> equals;
         private final LocalDateSegmentCombinator<V, V, V> combinator;
 
-        TimelineCompressor(BiPredicate<V, V> e, LocalDateSegmentCombinator<V, V, V> c) {
+        TimelineCompressor(BiPredicate<LocalDateInterval, LocalDateInterval> a, BiPredicate<V, V> e, LocalDateSegmentCombinator<V, V, V> c) {
+            this.abuts = a;
             this.equals = e;
             this.combinator = c;
         }
@@ -995,11 +1020,11 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
                 segmenter.add(t);
             } else {
                 LocalDateSegment<V> last = segmenter.last();
-                if (last.getLocalDateInterval().abuts(t.getLocalDateInterval())
+                if (abuts.test(last.getLocalDateInterval(), t.getLocalDateInterval())
                         && equals.test(last.getValue(), t.getValue())) {
                     // bytt ut og ekspander intervall for siste
                     segmenter.remove(last);
-                    LocalDateInterval expandedInterval = last.getLocalDateInterval().expand(t.getLocalDateInterval());
+                    LocalDateInterval expandedInterval = last.getLocalDateInterval().expand(t.getLocalDateInterval(), abuts);
                     segmenter.add(new LocalDateSegment<>(expandedInterval, combinator.combine(expandedInterval, last, t).getValue()));
                 } else {
                     segmenter.add(t);
@@ -1014,16 +1039,18 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
     }
 
     static class CompressorFactory<V> {
+        private final BiPredicate<LocalDateInterval, LocalDateInterval> abuts;
         private final BiPredicate<V, V> equals;
         private final LocalDateSegmentCombinator<V, V, V> combinator;
 
-        CompressorFactory(BiPredicate<V, V> e, LocalDateSegmentCombinator<V, V, V> c) {
+        CompressorFactory(BiPredicate<LocalDateInterval, LocalDateInterval> a, BiPredicate<V, V> e, LocalDateSegmentCombinator<V, V, V> c) {
+            this.abuts = a;
             this.equals = e;
             this.combinator = c;
         }
 
         TimelineCompressor<V> get() {
-            return new TimelineCompressor<>(equals, combinator);
+            return new TimelineCompressor<>(abuts, equals, combinator);
         }
     }
 

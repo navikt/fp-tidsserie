@@ -3,6 +3,7 @@ package no.nav.fpsak.tidsserie;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.Serializable;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
@@ -244,6 +245,46 @@ class LocalDateTimelineTest {
         assertThat(compressedTimeline).isEqualTo(timeline);
 
     }
+
+    @Test
+    void skal_compress_en_tidsserie_med_arbeidsuke_intervaller_med_samme_verdi() {
+
+        LocalDate d1 = LocalDate.now().with(DayOfWeek.WEDNESDAY);
+        LocalDate d2 = d1.with(DayOfWeek.FRIDAY);
+        LocalDate d3 = d1.plusWeeks(1).with(DayOfWeek.MONDAY);
+        LocalDate d4 = d3.plusDays(2);
+
+        // Arrange
+        LocalDateSegment<String> ds1 = new LocalDateSegment<>(d1, d2, "hello");
+        LocalDateSegment<String> ds2 = new LocalDateSegment<>(d3, d4, "hello");
+
+        // Assert adjusting
+        assertThat(new LocalDateInterval(d1, d2.plusDays(2)).adjustIntoWorkweek()).isEqualTo(ds1.getLocalDateInterval());
+        assertThat(new LocalDateInterval(d1, d2).extendThroughWeekend().getTomDato()).isEqualTo(d2.with(DayOfWeek.SUNDAY));
+        assertThat(new LocalDateInterval(d3.minusDays(1), d4).adjustIntoWorkweek()).isEqualTo(ds2.getLocalDateInterval());
+
+        // Arrange continuous
+        LocalDateTimeline<String> timeline = new LocalDateTimeline<>(List.of(ds1, ds2));
+
+        // Act continuous
+        var compressedTimeline = timeline.compress(LocalDateInterval::abutsWorkdays, String::equals, StandardCombinators::leftOnly);
+
+        // Assert continuous
+        assertThat(compressedTimeline.size()).isEqualTo(1);
+        assertThat(compressedTimeline).isEqualTo(new LocalDateTimeline<>(d1, d4, "hello"));
+
+        // Arrange discontinuous
+        LocalDateSegment<String> ds3 = new LocalDateSegment<>(d3.plusDays(1), d4, "hello");
+        LocalDateTimeline<String> discontinuous = new LocalDateTimeline<>(List.of(ds1, ds3));
+
+        // Act discontinuous
+        var compressedDiscont = discontinuous.compress(LocalDateInterval::abutsWorkdays, String::equals, StandardCombinators::leftOnly);
+
+        // Assert continuous
+        assertThat(compressedDiscont).isEqualTo(discontinuous);
+
+    }
+
 
     @Test
     void skal_gruppere_per_segment_periode() {
