@@ -1,17 +1,23 @@
 package no.nav.fpsak.tidsserie;
 
+import static java.time.temporal.TemporalAdjusters.next;
+
 import java.io.Serializable;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.Period;
 import java.time.chrono.ChronoLocalDate;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjuster;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.NavigableSet;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.BiPredicate;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -89,11 +95,17 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
     }
 
     /**
-     * Hvorvidt to intervaller ligger rett ved siden av hverandre (at this.tomDato
-     * == other.fomDato - 1 eller vice versa).
+     * Hvorvidt to intervaller ligger rett ved siden av hverandre (at this.tomDato == other.fomDato - 1 eller vice versa).
      */
     public boolean abuts(LocalDateInterval other) {
         return getTomDato().equals(other.getFomDato().minusDays(1)) || other.getTomDato().equals(getFomDato().minusDays(1));
+    }
+
+    /**
+     * Hvorvidt to intervaller ligger rett ved siden av hverandre (at this.tomDato == other.fomDato - 1 eller vice versa).
+     */
+    public boolean abutsWorkdays(LocalDateInterval other) {
+        return nextWorkday(getTomDato()).equals(adjustWeekendToMonday(other.getFomDato())) || nextWorkday(other.getTomDato()).equals(adjustWeekendToMonday(getFomDato()));
     }
 
     @Override
@@ -159,7 +171,11 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
     }
 
     public LocalDateInterval expand(LocalDateInterval other) {
-        if (!(this.abuts(other) || this.overlaps(other))) {
+        return expand(other, LocalDateInterval::abuts);
+    }
+
+    public LocalDateInterval expand(LocalDateInterval other, BiPredicate<LocalDateInterval, LocalDateInterval> abuts) {
+        if (!(abuts.test(this, other) || this.overlaps(other))) {
             throw new IllegalArgumentException(String.format("Intervals do not abut/overlap: %s <-> %s", this, other)); //$NON-NLS-1$
         } else {
             return new LocalDateInterval(min(this.getFomDato(), other.getFomDato()), max(getTomDato(), other.getTomDato()));
@@ -195,6 +211,10 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
      */
     public boolean isConnected(LocalDateInterval other) {
         return overlaps(other) || abuts(other);
+    }
+
+    public boolean isConnected(LocalDateInterval other, BiPredicate<LocalDateInterval, LocalDateInterval> abuts) {
+        return overlaps(other) || abuts.test(this, other);
     }
 
     public boolean isDateAfterOrEqualStartOfInterval(ChronoLocalDate dato) {
@@ -284,5 +304,38 @@ public class LocalDateInterval implements Comparable<LocalDateInterval>, Seriali
         LocalDate fomDato = fom == null || fom.isEmpty() || OPEN_END_FORMAT.equals(fom) ? null : LocalDate.parse(fom); // $NON-NLS-1$
         LocalDate tomDato = tom == null || tom.isEmpty() || OPEN_END_FORMAT.equals(tom) ? null : LocalDate.parse(tom); // $NON-NLS-1$
         return new LocalDateInterval(fomDato, tomDato);
+    }
+
+    /**
+     * Litt hjelp for perioder og arbeidsdager vs weekend. Funder på å inkludere helligdagsalgoritmen
+     */
+    public static final Set<DayOfWeek> WEEKEND = Set.of(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
+
+    public static LocalDate nextWorkday(LocalDate date) {
+        return adjustWeekendToMonday(date.plusDays(1));
+    }
+
+    public static LocalDate adjustWeekendToMonday(LocalDate date) {
+        return adjustWeekendTo(date, next(DayOfWeek.MONDAY));
+    }
+
+    public static LocalDate adjustWeekendToFriday(LocalDate date) {
+        return adjustWeekendTo(date, DayOfWeek.FRIDAY);
+    }
+
+    public static LocalDate adjustWeekendTo(LocalDate date, TemporalAdjuster weekendAdjuster) {
+        return WEEKEND.contains(DayOfWeek.from(date)) ? date.with(weekendAdjuster) : date;
+    }
+
+    public static LocalDate adjustThorughWeekend(LocalDate date) {
+        return WEEKEND.contains(DayOfWeek.from(date.plusDays(1))) ? date.with(DayOfWeek.SUNDAY) : date;
+    }
+
+    public LocalDateInterval adjustIntoWorkweek() {
+        return new LocalDateInterval(adjustWeekendToMonday(getFomDato()), adjustWeekendToFriday(getTomDato()));
+    }
+
+    public LocalDateInterval extendThroughWeekend() {
+        return new LocalDateInterval(getFomDato(), adjustThorughWeekend(getTomDato()));
     }
 }
