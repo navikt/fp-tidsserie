@@ -315,6 +315,31 @@ class LocalDateTimelineTest {
     }
 
     @Test
+    void skal_gruppere_per_segment_periode_med_overlapp_midt_i_periode() {
+        LocalDate d1 = LocalDate.now();
+        LocalDate d2 = d1.plusDays(2);
+        LocalDate d3 = d2.plusDays(1);
+        LocalDate d4 = d3.plusDays(2);
+
+
+        List<LocalDateSegment<String>> segmenterMedOverlapp = List.of(
+                new LocalDateSegment<>(d1, d4, "A"),
+                new LocalDateSegment<>(d2, d3, "B"));
+
+        var timeline = LocalDateTimeline.buildGroupOverlappingSegments(segmenterMedOverlapp).compress();
+        List<LocalDateInterval> intervaller = List.copyOf(timeline.getLocalDateIntervals());
+        assertThat(intervaller).hasSize(3);
+
+        assertThat(timeline.intersection(intervaller.get(0))).isEqualTo(new LocalDateTimeline<>(intervaller.get(0), List.of("A")));
+
+        assertThat(timeline.intersection(intervaller.get(1))).isEqualTo(new LocalDateTimeline<>(intervaller.get(1), List.of("A", "B")));
+
+        assertThat(timeline.intersection(intervaller.get(2))).isEqualTo(new LocalDateTimeline<>(intervaller.get(2), List.of("A")));
+
+
+    }
+
+    @Test
     void skal_håndtere_overlapp_når_flere_perioder_overlapper_med_hverandre() {
         Set<LocalDateSegment<Boolean>> segementer = new HashSet<>();
         LocalDateInterval førstePeriode = LocalDateInterval.withPeriodAfterDate(LocalDate.of(2015, 1, 1), Period.of(2, 0, 0));
