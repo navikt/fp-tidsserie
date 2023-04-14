@@ -265,7 +265,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         if (!harSegment) {
             return null;
         }
-        if (segment.getLocalDateInterval().equals(ønsketIntervall)){
+        if (segment.getLocalDateInterval().equals(ønsketIntervall)) {
             return segment;
         }
         return segmentSplitter.apply(ønsketIntervall, segment);
@@ -307,7 +307,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
     public LocalDateTimeline<V> compress(BiPredicate<LocalDateInterval, LocalDateInterval> a, BiPredicate<V, V> e, LocalDateSegmentCombinator<V, V, V> c) {
         var factory = new CompressorFactory<>(a, e, c);
         TimelineCompressor<V> compressor = segments.stream()
-            .collect(factory::get, TimelineCompressor::accept, TimelineCompressor::combine);
+                .collect(factory::get, TimelineCompressor::accept, TimelineCompressor::combine);
 
         return new LocalDateTimeline<>(compressor.segmenter);
     }
@@ -609,7 +609,8 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         @SuppressWarnings({"cast"})
         var uniqueSegments = segmentsWithPossibleOverlaps.stream().map(s -> new LocalDateSegment<>(s.getLocalDateInterval(), (List<V>) new ArrayList<V>()))
                 .collect(Collectors.toList());
-        var uniqueIntervalTimeline = new LocalDateTimeline<>(uniqueSegments, (interval, lhs, rhs) -> new LocalDateSegment<>(interval, new ArrayList<V>()));
+
+        var uniqueIntervalTimeline = new LocalDateTimeline<>(uniqueSegments, (interval, lhs, rhs) -> new LocalDateSegment<>(interval, new ArrayList<V>()), LocalDateTimeline::createNewListOnSplit);
 
         for (var per : uniqueIntervalTimeline.toSegments()) {
             for (var seg : segmentsWithPossibleOverlaps) {
@@ -619,6 +620,13 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             }
         }
         return uniqueIntervalTimeline;
+    }
+
+    private static <V> LocalDateSegment<List<V>> createNewListOnSplit(LocalDateInterval di, LocalDateSegment<List<V>> seg) {
+        if (di.equals(seg.getLocalDateInterval())) {
+            return seg;
+        }
+        return new LocalDateSegment<>(di, new ArrayList<>(seg.getValue()));
     }
 
     @Override
@@ -816,7 +824,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * Finner alle knekkpunkter fra to tidslinjer, i sekvens.
      * <p>
      * Knekkpunkter er 'start av et intervall' og 'dagen etter slutt av et intervall'. Sistnevnte fordi det da kan være starten på et nytt intervall
-     *
+     * <p>
      * Hvis slutt av intervall er LocalDate.MAX, er dagen etter ikke representerbar i LocalDate, derfor bruker denne klassen epochDay istedet
      */
     private static class KnekkpunktIterator<V, T> {
