@@ -1,8 +1,12 @@
-![](https://github.com/navikt/fp-tidsserie/workflows/Bygg%20og%20deploy/badge.svg) 
-[![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-tidsserie&metric=alert_status)](https://sonarcloud.io/dashboard?id=navikt_fp-tidsserie) 
+[![Bygg og deploy](https://github.com/navikt/fp-tidsserie/actions/workflows/build.yml/badge.svg)](https://github.com/navikt/fp-tidsserie/actions/workflows/build.yml)
+
+[![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-tidsserie&metric=alert_status)](https://sonarcloud.io/dashboard?id=navikt_fp-tidsserie)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-tidsserie&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=navikt_fp-tidsserie)
 [![SonarCloud Coverage](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-tidsserie&metric=coverage)](https://sonarcloud.io/component_measures/metric/coverage/list?id=navikt_fp-tidsserie)
 [![SonarCloud Bugs](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-tidsserie&metric=bugs)](https://sonarcloud.io/component_measures/metric/reliability_rating/list?id=navikt_fp-tidsserie)
 [![SonarCloud Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-tidsserie&metric=vulnerabilities)](https://sonarcloud.io/component_measures/metric/security_rating/list?id=navikt_fp-tidsserie)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=navikt_fp-tidsserie&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=navikt_fp-tidsserie)
+
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/navikt/fp-tidsserie)
 ![GitHub](https://img.shields.io/github/license/navikt/fp-tidsserie)
 
