@@ -21,8 +21,6 @@ jobs:
     permissions:
       contents: read
     uses: navikt/fp-gha-workflows/.github/workflows/build-feature.yml@main
-    with:
-      java-version: 21
     secrets: inherit
 
   release-drafter:
