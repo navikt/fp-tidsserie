@@ -1,37 +1,22 @@
 package no.nav.fpsak.tidsserie;
 
+import no.nav.fpsak.tidsserie.LocalDateTimeline.JoinStyle;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import no.nav.fpsak.tidsserie.LocalDateTimeline.JoinStyle;
-
 /** Standard (vanlige brukte) funksjoner for kombinere verdier fra to segmenter over et gitt interval. */
 public class StandardCombinators {
 
-    private static final Map<String, Number> ZEROS;
-
-    static {
-        ZEROS = new HashMap<>();
-        ZEROS.put("Long", 0L);
-        ZEROS.put("Integer", 0);
-        ZEROS.put("Double", 0d);
-        ZEROS.put("Float", 0f);
-        ZEROS.put("Short", (short) 0);
-        ZEROS.put("Byte", (byte) 0);
-        ZEROS.put("BigDecimal", BigDecimal.ZERO);
-        ZEROS.put("BigInteger", BigInteger.ZERO);
-    }
 
     private StandardCombinators() {
         // private
@@ -235,9 +220,9 @@ public class StandardCombinators {
         } else {
             // fungerer kun hvis begge har samme type
             if (lhs == null) {
-                return sumNonNull((L) ZEROS.get(rhs.getClass().getSimpleName()), rhs);
+                return sumNonNull((L) zero(rhs), rhs);
             } else if (rhs == null) {
-                return sumNonNull((L) ZEROS.get(lhs.getClass().getSimpleName()), lhs);
+                return sumNonNull((L) zero(lhs), lhs);
             }
         }
 
@@ -246,16 +231,15 @@ public class StandardCombinators {
 
     @SuppressWarnings("unchecked")
     private static <L extends Number, R extends Number> L sumNonNull(L lhs, R rhs) {
-        String type = lhs.getClass().getSimpleName();
-        return switch (type) {
-            case "Long" -> (L) Long.valueOf(lhs.longValue() + rhs.longValue());
-            case "Integer" -> (L) Integer.valueOf(lhs.intValue() + rhs.intValue());
-            case "Double" -> (L) Double.valueOf(lhs.doubleValue() + rhs.doubleValue());
-            case "Float" -> (L) Float.valueOf(lhs.floatValue() + rhs.floatValue());
-            case "Short" -> (L) Short.valueOf((short) (lhs.shortValue() + rhs.shortValue()));
-            case "Byte" -> (L) Byte.valueOf((byte) (lhs.byteValue() + rhs.byteValue()));
-            case "BigDecimal" -> (L) ((BigDecimal) lhs).add(new BigDecimal(rhs.toString()));
-            case "BigInteger" -> (L) ((BigInteger) lhs).add(new BigInteger(rhs.toString()));
+        return switch (lhs) {
+            case Long l -> (L) Long.valueOf(l + rhs.longValue());
+            case Integer i -> (L) Integer.valueOf(i + rhs.intValue());
+            case Double d -> (L) Double.valueOf(d + rhs.doubleValue());
+            case Float f -> (L) Float.valueOf(f + rhs.floatValue());
+            case Short s -> (L) Short.valueOf((short) (s + rhs.shortValue()));
+            case Byte b -> (L) Byte.valueOf((byte) (b + rhs.byteValue()));
+            case BigDecimal bd -> (L) bd.add(new BigDecimal(rhs.toString()));
+            case BigInteger bi -> (L) bi.add(new BigInteger(rhs.toString()));
             default -> (L) Double.valueOf(lhs.doubleValue() + rhs.doubleValue());
         };
     }
@@ -267,9 +251,9 @@ public class StandardCombinators {
         } else {
             // fungerer kun hvis begge har samme type
             if (lhs == null) {
-                return productNonNull((L) ZEROS.get(rhs.getClass().getSimpleName()), rhs);
+                return productNonNull((L) zero(rhs), rhs);
             } else if (rhs == null) {
-                return productNonNull((L) ZEROS.get(lhs.getClass().getSimpleName()), lhs);
+                return productNonNull((L) zero(lhs), lhs);
             }
         }
 
@@ -278,17 +262,31 @@ public class StandardCombinators {
 
     @SuppressWarnings("unchecked")
     private static <L extends Number, R extends Number> L productNonNull(L lhs, R rhs) {
-        String type = lhs.getClass().getSimpleName();
-        return switch (type) {
-            case "Long" -> (L) Long.valueOf(lhs.longValue() * rhs.longValue());
-            case "Integer" -> (L) Integer.valueOf(lhs.intValue() * rhs.intValue());
-            case "Double" -> (L) Double.valueOf(lhs.doubleValue() * rhs.doubleValue());
-            case "Float" -> (L) Float.valueOf(lhs.floatValue() * rhs.floatValue());
-            case "Short" -> (L) Short.valueOf((short) (lhs.shortValue() * rhs.shortValue()));
-            case "Byte" -> (L) Byte.valueOf((byte) (lhs.byteValue() * rhs.byteValue()));
-            case "BigDecimal" -> (L) ((BigDecimal) lhs).multiply(new BigDecimal(rhs.toString()));
-            case "BigInteger" -> (L) ((BigInteger) lhs).multiply(new BigInteger(rhs.toString()));
+        return switch (lhs) {
+            case Long l -> (L) Long.valueOf(l * rhs.longValue());
+            case Integer i -> (L) Integer.valueOf(i * rhs.intValue());
+            case Double d -> (L) Double.valueOf(d * rhs.doubleValue());
+            case Float f -> (L) Float.valueOf(f * rhs.floatValue());
+            case Short s -> (L) Short.valueOf((short) (s * rhs.shortValue()));
+            case Byte b -> (L) Byte.valueOf((byte) (b * rhs.byteValue()));
+            case BigDecimal bd -> (L) bd.multiply(new BigDecimal(rhs.toString()));
+            case BigInteger bi -> (L) bi.multiply(new BigInteger(rhs.toString()));
             default -> (L) Double.valueOf(lhs.doubleValue() * rhs.doubleValue());
+        };
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <L extends Number> L zero(L lhs) {
+        return switch (lhs) {
+            case Long l -> (L) Long.valueOf(0L);
+            case Integer i -> (L) Integer.valueOf(0);
+            case Double d -> (L) Double.valueOf(0d);
+            case Float f -> (L) Float.valueOf(0f);
+            case Short s -> (L) Short.valueOf((short) 0);
+            case Byte b -> (L) Byte.valueOf((byte) 0);
+            case BigDecimal bd -> (L) BigDecimal.ZERO;
+            case BigInteger bi -> (L) BigInteger.ZERO;
+            default -> (L) Double.valueOf(0d);
         };
     }
 }
