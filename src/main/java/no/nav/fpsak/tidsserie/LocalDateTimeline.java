@@ -670,8 +670,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      * Quick check to see if interval is completely outside timeline. (avoids testing each segment)
      */
     public boolean isTimelineOutsideInterval(LocalDateInterval datoInterval) {
-        return !(datoInterval.getFomDato().isBefore(this.getMaxLocalDate().plusDays(1))
-                && datoInterval.getTomDato().isAfter(this.getMinLocalDate().minusDays(1)));
+        return datoInterval.getFomDato().isAfter(this.getMaxLocalDate()) || datoInterval.getTomDato().isBefore(this.getMinLocalDate());
     }
 
     private void addWhenOverlap(LocalDateSegment<V> datoSegment, LocalDateSegmentCombinator<V, V, V> overlapCombinator, LocalDateInterval datoInterval) {

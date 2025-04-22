@@ -430,6 +430,39 @@ class LocalDateTimelineTest {
         assertThat(tidslinjeAB).isEqualTo(new LocalDateTimeline<>(LocalDate.MAX, LocalDate.MAX, "AB"));
     }
 
+    @Test
+    void skal_håndtere_en_tidslinje_med_MIN_og_MAX_ved_sjekk_om_isTimelineOutsideInterval() {
+        LocalDateTimeline<Boolean> tidslinjeA = new LocalDateTimeline<>(LocalDate.MIN, LocalDate.MAX, true);
+        assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(LocalDate.MIN, LocalDate.of(2025, 2, 23)))).isFalse();
+        assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(LocalDate.MIN, LocalDate.MAX))).isFalse();
+    }
+
+    @Test
+    void verifiser_korrekt_oppførsel_av_begrenset_tidslinje_isTimelineOutsideInterval() {
+        LocalDateTimeline<Boolean> tidslinjeA = new LocalDateTimeline<>(LocalDate.of(2020, 1, 1), LocalDate.of(2025, 1, 1), true);
+
+        var datoUtenforFørIntervall = LocalDate.of(2019, 1, 1);
+        var datoUtenforEtterIntervall = LocalDate.of(2025, 2, 1);
+        var datoInneIIntervall = LocalDate.of(2023, 1, 1);
+        assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(LocalDate.MIN, datoUtenforFørIntervall))).isTrue();
+        assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(LocalDate.MIN, datoInneIIntervall))).isFalse();
+        assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(datoInneIIntervall, LocalDate.MAX))).isFalse();
+        assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(datoInneIIntervall, datoInneIIntervall))).isFalse();
+        assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(datoUtenforEtterIntervall, LocalDate.MAX))).isTrue();
+    }
+
+
+
+    @Test
+    void verifiser_grenseverdier_ved_sjekk_om_interval_er_utenfor_tidslinje() {
+        var fom = LocalDate.of(2020, 1, 1);
+        var tom = LocalDate.of(2025, 1, 1);
+        LocalDateTimeline<Boolean> tidslinjeA = new LocalDateTimeline<>(fom, tom, true);
+
+        assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(LocalDate.MIN, tom))).isFalse();
+        assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(fom, LocalDate.MAX))).isFalse();
+    }
+
     @Disabled("Micro performance test - kun for spesielt interesserte! Kan brukes til å avsjekke forbedringer i join algoritme")
     @Test
     void kjapp_ytelse_test() {
