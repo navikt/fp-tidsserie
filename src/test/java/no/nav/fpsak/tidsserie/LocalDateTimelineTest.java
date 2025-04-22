@@ -451,6 +451,18 @@ class LocalDateTimelineTest {
         assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(datoUtenforEtterIntervall, LocalDate.MAX))).isTrue();
     }
 
+
+
+    @Test
+    void verifiser_grenseverdier_ved_sjekk_om_interval_er_utenfor_tidslinje() {
+        var fom = LocalDate.of(2020, 1, 1);
+        var tom = LocalDate.of(2025, 1, 1);
+        LocalDateTimeline<Boolean> tidslinjeA = new LocalDateTimeline<>(fom, tom, true);
+
+        assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(LocalDate.MIN, tom))).isFalse();
+        assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(fom, LocalDate.MAX))).isFalse();
+    }
+
     @Disabled("Micro performance test - kun for spesielt interesserte! Kan brukes til å avsjekke forbedringer i join algoritme")
     @Test
     void kjapp_ytelse_test() {
