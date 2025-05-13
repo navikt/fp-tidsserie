@@ -1,25 +1,19 @@
 package no.nav.fpsak.tidsserie.json;
 
-import java.io.IOException;
-
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.BeanProperty;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.deser.std.UntypedObjectDeserializer.Vanilla;
+import com.fasterxml.jackson.databind.deser.std.UntypedObjectDeserializer;
 import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-
 import no.nav.fpsak.tidsserie.LocalDateInterval;
 import no.nav.fpsak.tidsserie.LocalDateSegment;
+
+import java.io.IOException;
 
 /**
  * Custom serializer/deserializer for LocalDateSement for å håndtere deserialisering av nøstede objekter uten å forurense json struktur
@@ -74,7 +68,7 @@ public class LocalDateSegmentFormatters {
                     if (valueType != null) {
                         val = p.getCodec().readValue(p, valueType);
                     } else {
-                        val = new Vanilla().deserialize(p, ctx);
+                        val = new UntypedObjectDeserializer(null, null).deserialize(p, ctx);
                     }
                 }
 
