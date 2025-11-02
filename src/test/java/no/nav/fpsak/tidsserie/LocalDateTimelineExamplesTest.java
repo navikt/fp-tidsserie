@@ -18,12 +18,12 @@ import org.junit.jupiter.api.Test;
 
 import no.nav.fpsak.tidsserie.LocalDateTimeline.JoinStyle;
 
-public class LocalDateTimelineExamplesTest {
+class LocalDateTimelineExamplesTest {
 
     private final LocalDate today = LocalDate.now();
 
     @Test
-    public void eksempel_slå_sammen_string_verdier() throws Exception {
+    void eksempel_slå_sammen_string_verdier() {
         // bruker tall til å referer relative dager til today
 
         LocalDateTimeline<String> timelineA = toTimeline(new Object[][] {
@@ -85,7 +85,7 @@ public class LocalDateTimelineExamplesTest {
     }
 
     @Test
-    public void eksempel_slå_sammen_begge_verdier() throws Exception {
+    void eksempel_slå_sammen_begge_verdier() {
         // bruker tall til å referer relative dager til today
 
         LocalDateTimeline<String> timelineA = toTimeline(new Object[][] {
@@ -139,7 +139,7 @@ public class LocalDateTimelineExamplesTest {
     }
 
     @Test
-    public void eksempel_slå_sammen_med_alle_verdier() throws Exception {
+    void eksempel_slå_sammen_med_alle_verdier() {
         // bruker tall til å referer relative dager til today
 
         LocalDateTimeline<List<String>> timelineA = toTimeline(new Object[][] {
@@ -191,7 +191,7 @@ public class LocalDateTimelineExamplesTest {
     }
 
     @Test
-    public void eksempel_kun_venstre_side() throws Exception {
+    void eksempel_kun_venstre_side() {
         // bruker tall til å referer relative dager til today
 
         LocalDateTimeline<List<String>> timelineA = toTimeline(new Object[][] {
@@ -210,7 +210,7 @@ public class LocalDateTimelineExamplesTest {
     }
 
     @Test
-    public void eksempel_kun_høyre_side() throws Exception {
+    void eksempel_kun_høyre_side() {
         // bruker tall til å referer relative dager til today
 
         LocalDateTimeline<List<String>> timelineA = toTimeline(new Object[][] {
@@ -229,7 +229,7 @@ public class LocalDateTimelineExamplesTest {
     }
 
     @Test
-    public void eksempel_slå_sammen_tall_verdier() throws Exception {
+    void eksempel_slå_sammen_tall_verdier() {
         // bruker tall til å referer relative dager til today
 
         double A = 15d;
@@ -288,7 +288,7 @@ public class LocalDateTimelineExamplesTest {
     }
 
     @Test
-    public void eksempel_multipliser_sammen_tall_verdier() throws Exception {
+    void eksempel_multipliser_sammen_tall_verdier() {
         // bruker tall til å referer relative dager til today
 
         double A = 15d;
@@ -347,7 +347,7 @@ public class LocalDateTimelineExamplesTest {
     }
 
     @Test
-    public void eksempel_splitt_av_tidsserie_ved_bruk_av_kvoter() throws Exception {
+    void eksempel_splitt_av_tidsserie_ved_bruk_av_kvoter() {
 
         class Kvoter<V> implements Function<LocalDateSegment<V>, List<LocalDateSegment<V>>> {
             // Enkle kvoter knyttet til verdi i segmentet.
@@ -407,7 +407,7 @@ public class LocalDateTimelineExamplesTest {
     }
 
     @Test
-    public void eksempel_splitt_av_tidsserie_ved_period_year() throws Exception {
+    void eksempel_splitt_av_tidsserie_ved_period_year() {
 
         var timeline = new LocalDateTimeline<>(
                 List.of(
@@ -428,7 +428,7 @@ public class LocalDateTimelineExamplesTest {
     }
 
     @Test
-    public void eksempel_splitt_av_tidsserie_ved_period_day_3() throws Exception {
+    void eksempel_splitt_av_tidsserie_ved_period_day_3() {
 
         var timeline = new LocalDateTimeline<>(
                 List.of(
@@ -456,7 +456,7 @@ public class LocalDateTimelineExamplesTest {
     }
 
     @Test
-    public void eksempel_splitt_av_tidsserie_ved_period_week_1() throws Exception {
+    void eksempel_splitt_av_tidsserie_ved_period_week_1() {
 
         var timeline = new LocalDateTimeline<>(
                 List.of(
@@ -478,7 +478,7 @@ public class LocalDateTimelineExamplesTest {
     }
 
     @Test
-    public void min_comparable_test() {
+    void min_comparable_test() {
 
         var tidligDato = LocalDate.of(2019,11,15);
         var senereDato = LocalDate.of(2020,6,1);
@@ -509,7 +509,7 @@ public class LocalDateTimelineExamplesTest {
     }
 
     @Test
-    public void set_difference() {
+    void set_difference() {
 
         var timelineA = new LocalDateTimeline<Set<Integer>>(
             List.of(

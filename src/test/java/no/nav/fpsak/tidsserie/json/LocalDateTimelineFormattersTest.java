@@ -15,7 +15,7 @@ import no.nav.fpsak.tidsserie.LocalDateInterval;
 import no.nav.fpsak.tidsserie.LocalDateSegment;
 import no.nav.fpsak.tidsserie.LocalDateTimeline;
 
-public class LocalDateTimelineFormattersTest {
+class LocalDateTimelineFormattersTest {
     LocalDate fom = LocalDate.of(1970, 10, 15);
     LocalDate tom = LocalDate.of(1970, 12, 15);
     LocalDate fom2 = LocalDate.of(1971, 10, 15);
@@ -23,7 +23,7 @@ public class LocalDateTimelineFormattersTest {
     JsonTimelineFormatter formatter = new JsonTimelineFormatter();
 
     @Test
-    public void serialiser_deserialiser_wrapped_LocalDateTimline() throws Exception {
+    void serialiser_deserialiser_wrapped_LocalDateTimline() {
         LocalDateSegment<Heisann> seg1 = new LocalDateSegment<>(new LocalDateInterval(fom, tom), new Heisann());
         LocalDateSegment<Heisann> seg2 = new LocalDateSegment<>(new LocalDateInterval(fom2, tom2), new Heisann());
         LocalDateTimeline<Heisann> timeline = new LocalDateTimeline<>(Arrays.asList(seg1, seg2));
@@ -40,7 +40,7 @@ public class LocalDateTimelineFormattersTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void serialiser_deserialiser_primitiv_Long_LocalDateTimline() throws Exception {
+    void serialiser_deserialiser_primitiv_Long_LocalDateTimline() {
 
         LocalDateSegment<Long> seg1 = new LocalDateSegment<>(new LocalDateInterval(fom, tom), 1L);
         LocalDateSegment<Long> seg2 = new LocalDateSegment<>(new LocalDateInterval(fom2, tom2), 99L);
@@ -57,7 +57,7 @@ public class LocalDateTimelineFormattersTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void serialiser_deserialiser_BigDecimal_LocalDateTimline() throws Exception {
+    void serialiser_deserialiser_BigDecimal_LocalDateTimline() {
 
         LocalDateSegment<BigDecimal> seg1 = new LocalDateSegment<>(new LocalDateInterval(fom, tom), new BigDecimal(22L));
         LocalDateSegment<BigDecimal> seg2 = new LocalDateSegment<>(new LocalDateInterval(fom2, tom2), new BigDecimal("33"));
@@ -74,7 +74,7 @@ public class LocalDateTimelineFormattersTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void serialiser_deserialiser_String_LocalDateTimline() throws Exception {
+    void serialiser_deserialiser_String_LocalDateTimline() {
 
         LocalDateSegment<String> seg1 = new LocalDateSegment<>(new LocalDateInterval(fom, tom), "hei");
         LocalDateSegment<String> seg2 = new LocalDateSegment<>(new LocalDateInterval(fom2, tom2), "hallo");
@@ -91,7 +91,7 @@ public class LocalDateTimelineFormattersTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void serialiser_deserialiser_LocalDateTimline() throws Exception {
+    void serialiser_deserialiser_LocalDateTimline() {
 
         LocalDateSegment<Heisann> seg1 = new LocalDateSegment<>(new LocalDateInterval(fom, tom), new Heisann());
         LocalDateSegment<Heisann> seg2 = new LocalDateSegment<>(new LocalDateInterval(fom2, tom2), new Heisann());

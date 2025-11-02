@@ -8,10 +8,10 @@ import java.util.NavigableSet;
 
 import org.junit.jupiter.api.Test;
 
-public class LocalDateIntervalTest {
+class LocalDateIntervalTest {
 
     @Test
-    public void skal_overlappe() throws Exception {
+    void skal_overlappe() {
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(3);
         LocalDate d3 = d2;
@@ -33,7 +33,7 @@ public class LocalDateIntervalTest {
     }
 
     @Test
-    public void skal_ikke_overlappe() throws Exception {
+    void skal_ikke_overlappe() {
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(3);
         LocalDate d3 = d2.plusDays(1);
@@ -47,7 +47,7 @@ public class LocalDateIntervalTest {
     }
 
     @Test
-    public void skal_inneholde() throws Exception {
+    void skal_inneholde() {
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(5);
         LocalDate d3 = d1.plusDays(3);
@@ -62,7 +62,7 @@ public class LocalDateIntervalTest {
     }
 
     @Test
-    public void skal_ikke_inneholde() throws Exception {
+    void skal_ikke_inneholde() {
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(2);
         LocalDate d3 = d2.plusDays(1);
@@ -74,7 +74,7 @@ public class LocalDateIntervalTest {
     }
 
     @Test
-    public void skal_splitte_intervall_på_lik_grense_fom_tom() throws Exception {
+    void skal_splitte_intervall_på_lik_grense_fom_tom() {
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(3);
         LocalDate d3 = d2;
@@ -93,7 +93,7 @@ public class LocalDateIntervalTest {
     }
 
     @Test
-    public void skal_splitte_intervall_som_grenser_til_hverandre() throws Exception {
+    void skal_splitte_intervall_som_grenser_til_hverandre() {
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(3);
         LocalDate d3 = d2.plusDays(1);
@@ -111,7 +111,7 @@ public class LocalDateIntervalTest {
     }
 
     @Test
-    public void skal_ikke_splitte_intervall_som_ikke_overlapper_eller_ligger_inntil_hverandre() throws Exception {
+    void skal_ikke_splitte_intervall_som_ikke_overlapper_eller_ligger_inntil_hverandre() {
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(3);
         LocalDate d3 = d2.plusDays(3);
@@ -129,7 +129,7 @@ public class LocalDateIntervalTest {
     }
 
     @Test
-    public void skal_dele_opp_intervall_når_det_trekkes_fra_annet() throws Exception {
+    void skal_dele_opp_intervall_når_det_trekkes_fra_annet() {
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(3);
         LocalDate d3 = d1.plusDays(1);
@@ -144,7 +144,7 @@ public class LocalDateIntervalTest {
     }
 
     @Test
-    public void skal_dele_opp_intervall_når_det_trekkes_fra_annet_i_midten() throws Exception {
+    void skal_dele_opp_intervall_når_det_trekkes_fra_annet_i_midten() {
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(3);
         LocalDate d3 = d1.plusDays(1);
@@ -159,7 +159,7 @@ public class LocalDateIntervalTest {
     }
 
     @Test
-    public void skal_dele_opp_intervall_når_det_trekkes_fra_annet_fra_start() throws Exception {
+    void skal_dele_opp_intervall_når_det_trekkes_fra_annet_fra_start() {
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(3);
         LocalDate d3 = d1.minusDays(2);
@@ -174,7 +174,7 @@ public class LocalDateIntervalTest {
     }
 
     @Test
-    public void skal_expande_intervall_når_det_ligger_inntil() throws Exception {
+    void skal_expande_intervall_når_det_ligger_inntil() {
 
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(3);
@@ -188,7 +188,7 @@ public class LocalDateIntervalTest {
     }
 
     @Test
-    public void skal_kaste_exception_når_forsøker_expanded_interval_som_ikke_er_abut() throws Exception {
+    void skal_kaste_exception_når_forsøker_expanded_interval_som_ikke_er_abut() {
 
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(3);
@@ -201,7 +201,7 @@ public class LocalDateIntervalTest {
     }
 
     @Test
-    public void skal_expande_intervall_når_de_overlapper() throws Exception {
+    void skal_expande_intervall_når_de_overlapper() {
 
         LocalDate d1 = LocalDate.now();
         LocalDate d2 = d1.plusDays(3);

@@ -10,10 +10,10 @@ import org.junit.jupiter.api.Test;
 import no.nav.fpsak.tidsserie.LocalDateInterval;
 import no.nav.fpsak.tidsserie.LocalDateSegment;
 
-public class LocalDateSegmentFormattersTest {
+class LocalDateSegmentFormattersTest {
 
     @Test
-    public void serialiser_deserialiser_LocalDateSegment() throws Exception {
+    void serialiser_deserialiser_LocalDateSegment() {
         LocalDate fom = LocalDate.of(1970, 10, 15);
         LocalDate tom = LocalDate.of(1970, 12, 15);
 
@@ -38,7 +38,7 @@ public class LocalDateSegmentFormattersTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void serialiser_deserialiser_primitiv_LocalDateSegment() throws Exception {
+    void serialiser_deserialiser_primitiv_LocalDateSegment() {
         LocalDate fom = LocalDate.of(1970, 10, 15);
         LocalDate tom = LocalDate.of(1970, 12, 15);
 

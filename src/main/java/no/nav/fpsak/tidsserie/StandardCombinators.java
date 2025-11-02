@@ -278,14 +278,14 @@ public class StandardCombinators {
     @SuppressWarnings("unchecked")
     private static <L extends Number> L zero(L lhs) {
         return switch (lhs) {
-            case Long l -> (L) Long.valueOf(0L);
-            case Integer i -> (L) Integer.valueOf(0);
-            case Double d -> (L) Double.valueOf(0d);
-            case Float f -> (L) Float.valueOf(0f);
-            case Short s -> (L) Short.valueOf((short) 0);
-            case Byte b -> (L) Byte.valueOf((byte) 0);
-            case BigDecimal bd -> (L) BigDecimal.ZERO;
-            case BigInteger bi -> (L) BigInteger.ZERO;
+            case Long _ -> (L) Long.valueOf(0L);
+            case Integer _ -> (L) Integer.valueOf(0);
+            case Double _ -> (L) Double.valueOf(0d);
+            case Float _ -> (L) Float.valueOf(0f);
+            case Short _ -> (L) Short.valueOf((short) 0);
+            case Byte _ -> (L) Byte.valueOf((byte) 0);
+            case BigDecimal _ -> (L) BigDecimal.ZERO;
+            case BigInteger _ -> (L) BigInteger.ZERO;
             default -> (L) Double.valueOf(0d);
         };
     }
