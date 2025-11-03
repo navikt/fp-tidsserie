@@ -8,10 +8,10 @@ import org.junit.jupiter.api.Test;
 
 import no.nav.fpsak.tidsserie.LocalDateInterval;
 
-public class LocalDateIntervalFormattersTest {
+class LocalDateIntervalFormattersTest {
 
     @Test
-    public void serialiser_deserialiser_LocalDateInterval() throws Exception {
+    void serialiser_deserialiser_LocalDateInterval() {
         LocalDate fom = LocalDate.of(1970, 10, 15);
         LocalDate tom = LocalDate.of(1970, 12, 15);
 

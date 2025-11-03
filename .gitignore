@@ -16,3 +16,4 @@ _*.sh
 dep.txt
 .mvn/maven.config
 .flattened*
+.java-version
