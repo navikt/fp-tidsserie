@@ -31,12 +31,6 @@ public class LocalDateSegmentFormatters {
             this.valueType = valueType;
         }
 
-        @Override
-        public Object deserializeWithType(JsonParser p, DeserializationContext ctxt, TypeDeserializer typeDeserializer) throws JacksonException {
-            // TODO Auto-generated method stub
-            return super.deserializeWithType(p, ctxt, typeDeserializer);
-        }
-
         @SuppressWarnings("rawtypes")
         @Override
         public LocalDateSegment deserialize(JsonParser p, DeserializationContext ctx) throws JacksonException {
