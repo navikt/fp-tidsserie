@@ -47,27 +47,18 @@ public class LocalDateSegmentFormatters {
                 }
                 String fom = null;
                 if (p.hasToken(JsonToken.VALUE_STRING)) {
-                    fom = p.getText().trim();
+                    fom = p.getString().trim();
                 }
-                t = p.nextToken();
+                p.nextToken();
                 String tom = null;
                 if (p.hasToken(JsonToken.VALUE_STRING)) {
-                    tom = p.getText().trim();
+                    tom = p.getString().trim();
                 }
 
                 LocalDateInterval dateInterval = LocalDateInterval.parseFrom(fom, tom);
 
-                Object val = null;
-                t = p.nextToken();
-                if (p.hasToken(JsonToken.START_OBJECT)) {
-                    val = p.readValueAs(valueType);
-                } else {
-                    if (valueType != null) {
-                        val = p.readValueAs(valueType);
-                    } else {
-                        val = new UntypedObjectDeserializer(null, null).deserialize(p, ctx);
-                    }
-                }
+                p.nextToken();
+                Object val = getValue(p, ctx);
 
                 t = p.nextToken();
                 if (t != JsonToken.END_ARRAY) {
@@ -77,6 +68,18 @@ public class LocalDateSegmentFormatters {
                 return new LocalDateSegment<>(dateInterval, val);
             }
             throw ctx.wrongTokenException(p, handledType(), JsonToken.VALUE_STRING, "Expected array or string.");
+        }
+
+        private Object getValue(JsonParser p, DeserializationContext ctx) throws JacksonException {
+            if (p.hasToken(JsonToken.START_OBJECT)) {
+                return p.readValueAs(valueType);
+            } else {
+                if (valueType != null) {
+                    return p.readValueAs(valueType);
+                } else {
+                    return new UntypedObjectDeserializer(null, null).deserialize(p, ctx);
+                }
+            }
         }
 
         @Override
