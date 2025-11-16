@@ -28,12 +28,12 @@ public class LocalDateIntervalFormatters {
                 }
                 String fom = null;
                 if (p.hasToken(JsonToken.VALUE_STRING)) {
-                    fom = p.getText().trim();
+                    fom = p.getString().trim();
                 }
                 t = p.nextToken();
                 String tom = null;
                 if (p.hasToken(JsonToken.VALUE_STRING)) {
-                    tom = p.getText().trim();
+                    tom = p.getString().trim();
                 }
                 LocalDateInterval dateInterval = LocalDateInterval.parseFrom(fom, tom);
 
