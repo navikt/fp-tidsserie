@@ -1,22 +1,14 @@
 package no.nav.fpsak.tidsserie.json;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.BeanProperty;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.*;
+import tools.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.ser.std.StdSerializer;
 
 import no.nav.fpsak.tidsserie.LocalDateSegment;
 import no.nav.fpsak.tidsserie.LocalDateTimeline;
@@ -28,7 +20,7 @@ import no.nav.fpsak.tidsserie.LocalDateTimeline;
 public class LocalDateTimelineFormatters {
 
     @SuppressWarnings("rawtypes")
-    public static class Deserializer extends StdDeserializer<LocalDateTimeline> implements ContextualDeserializer {
+    public static class Deserializer extends StdDeserializer<LocalDateTimeline> {
 
         private JavaType valueType;
 
@@ -43,7 +35,7 @@ public class LocalDateTimelineFormatters {
 
         @SuppressWarnings("unchecked")
         @Override
-        public LocalDateTimeline deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JsonProcessingException {
+        public LocalDateTimeline deserialize(JsonParser p, DeserializationContext ctx) throws JacksonException {
             if (p.isExpectedStartArrayToken()) {
                 JsonToken t = p.nextToken();
                 if (t == JsonToken.END_ARRAY) {
@@ -52,10 +44,10 @@ public class LocalDateTimelineFormatters {
                 
                 JavaType parametricType = ctx.getTypeFactory().constructParametricType(LocalDateSegment.class, valueType);
 
-                Iterator<LocalDateSegment> iterator = p.getCodec().readValues(p, parametricType);
                 ArrayList<LocalDateSegment> list = new ArrayList<>();
-                for (; iterator.hasNext();) {
-                    list.add(iterator.next());
+                while (t != JsonToken.END_ARRAY) {
+                    list.add(p.readValueAs(parametricType));
+                    t = p.nextToken();
                 }
 
                 return new LocalDateTimeline(list);
@@ -64,7 +56,7 @@ public class LocalDateTimelineFormatters {
         }
 
         @Override
-        public JsonDeserializer<?> createContextual(DeserializationContext ctx, BeanProperty property) throws JsonMappingException {
+        public ValueDeserializer<?> createContextual(DeserializationContext ctx, BeanProperty property) throws JacksonException {
             JavaType wrapperType;
             if (property == null) {
                 wrapperType = ctx.getContextualType();
@@ -85,7 +77,7 @@ public class LocalDateTimelineFormatters {
         }
 
         @Override
-        public void serialize(LocalDateTimeline value, JsonGenerator gen, SerializerProvider provider) throws IOException {
+        public void serialize(LocalDateTimeline value, JsonGenerator gen, SerializationContext provider) {
             String json = FORMATTER.formatJson(value.toSegments());
             gen.writeRawValue(json);
         }
