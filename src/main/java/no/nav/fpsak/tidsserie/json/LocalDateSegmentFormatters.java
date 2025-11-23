@@ -7,8 +7,8 @@ import tools.jackson.core.JsonToken;
 import tools.jackson.databind.*;
 import tools.jackson.databind.deser.jdk.UntypedObjectDeserializer;
 import tools.jackson.databind.deser.std.StdDeserializer;
-import tools.jackson.databind.jsontype.TypeDeserializer;
 import tools.jackson.databind.ser.std.StdSerializer;
+
 import no.nav.fpsak.tidsserie.LocalDateInterval;
 import no.nav.fpsak.tidsserie.LocalDateSegment;
 
@@ -39,17 +39,8 @@ public class LocalDateSegmentFormatters {
                 if (t == JsonToken.END_ARRAY) {
                     return null;
                 }
-                String fom = null;
-                if (p.hasToken(JsonToken.VALUE_STRING)) {
-                    fom = p.getString().trim();
-                }
-                p.nextToken();
-                String tom = null;
-                if (p.hasToken(JsonToken.VALUE_STRING)) {
-                    tom = p.getString().trim();
-                }
 
-                LocalDateInterval dateInterval = LocalDateInterval.parseFrom(fom, tom);
+                LocalDateInterval dateInterval = LocalDateIntervalFormatters.Deserializer.localDateInterval(p);
 
                 p.nextToken();
                 Object val = getValue(p, ctx);
@@ -98,11 +89,12 @@ public class LocalDateSegmentFormatters {
         @Override
         public void serialize(LocalDateSegment value, JsonGenerator g, SerializationContext provider)
                 throws JacksonException {
-            g.writeStartArray();
-            LocalDateInterval dateInterval = value.getLocalDateInterval();
-            g.writeString(LocalDateInterval.formatDate(dateInterval.getFomDato(), "-"));
-            g.writeString(LocalDateInterval.formatDate(dateInterval.getTomDato(), "-"));
+            localDateSegment(value, g);
+        }
 
+        public static void localDateSegment(LocalDateSegment value, JsonGenerator g) throws JacksonException {
+            g.writeStartArray();
+            LocalDateIntervalFormatters.Serializer.localDateInterval(value.getLocalDateInterval(), g);
             if (value.getValue() != null) {
                 g.writePOJO(value.getValue());
             }
