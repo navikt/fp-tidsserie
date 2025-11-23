@@ -26,16 +26,8 @@ public class LocalDateIntervalFormatters {
                 if (t == JsonToken.END_ARRAY) {
                     return null;
                 }
-                String fom = null;
-                if (p.hasToken(JsonToken.VALUE_STRING)) {
-                    fom = p.getString().trim();
-                }
-                t = p.nextToken();
-                String tom = null;
-                if (p.hasToken(JsonToken.VALUE_STRING)) {
-                    tom = p.getString().trim();
-                }
-                LocalDateInterval dateInterval = LocalDateInterval.parseFrom(fom, tom);
+
+                LocalDateInterval dateInterval = localDateInterval(p);
 
                 t = p.nextToken();
                 if (t != JsonToken.END_ARRAY) {
@@ -45,6 +37,19 @@ public class LocalDateIntervalFormatters {
                 return dateInterval;
             }
             throw ctx.wrongTokenException(p, handledType(), JsonToken.VALUE_STRING, "Expected array or string.");
+        }
+
+        public static LocalDateInterval localDateInterval(JsonParser p) throws JacksonException {
+            String fom = null;
+            if (p.hasToken(JsonToken.VALUE_STRING)) {
+                fom = p.getString().trim();
+            }
+            p.nextToken();
+            String tom = null;
+            if (p.hasToken(JsonToken.VALUE_STRING)) {
+                tom = p.getString().trim();
+            }
+            return LocalDateInterval.parseFrom(fom, tom);
         }
     }
 
@@ -58,9 +63,13 @@ public class LocalDateIntervalFormatters {
         public void serialize(LocalDateInterval value, JsonGenerator g, SerializationContext provider)
                 throws JacksonException {
             g.writeStartArray();
+            localDateInterval(value, g);
+            g.writeEndArray();
+        }
+
+        public static void localDateInterval(LocalDateInterval value, JsonGenerator g) throws JacksonException {
             g.writeString(LocalDateInterval.formatDate(value.getFomDato(), "-"));
             g.writeString(LocalDateInterval.formatDate(value.getTomDato(), "-"));
-            g.writeEndArray();
         }
     }
 

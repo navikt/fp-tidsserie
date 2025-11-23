@@ -70,16 +70,18 @@ public class LocalDateTimelineFormatters {
 
     @SuppressWarnings("rawtypes")
     public static class Serializer extends StdSerializer<LocalDateTimeline> {
-        private static final JsonTimelineFormatter FORMATTER = new JsonTimelineFormatter();
 
         public Serializer() {
             super(LocalDateTimeline.class);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public void serialize(LocalDateTimeline value, JsonGenerator gen, SerializationContext provider) {
-            String json = FORMATTER.formatJson(value.toSegments());
-            gen.writeRawValue(json);
+            gen.writeStartArray();
+            value.toSegments()
+                    .forEach(segment -> LocalDateSegmentFormatters.Serializer.localDateSegment((LocalDateSegment) segment, gen));
+            gen.writeEndArray();
         }
 
     }
