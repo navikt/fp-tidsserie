@@ -346,18 +346,18 @@ class LocalDateTimelineTest {
 
 
         List<LocalDateSegment<String>> segmenterMedOverlapp = List.of(
-                new LocalDateSegment<>(d2, d3, "B"),
-                new LocalDateSegment<>(d1, d4, "A"));
+                new LocalDateSegment<>(d2, d3, "A"),
+                new LocalDateSegment<>(d1, d4, "B"));
 
         var timeline = LocalDateTimeline.buildGroupOverlappingSegments(segmenterMedOverlapp).compress();
         List<LocalDateInterval> intervaller = List.copyOf(timeline.getLocalDateIntervals());
         assertThat(intervaller).hasSize(3);
 
-        assertThat(timeline.intersection(intervaller.get(0))).isEqualTo(new LocalDateTimeline<>(intervaller.get(0), List.of("A")));
+        assertThat(timeline.intersection(intervaller.get(0))).isEqualTo(new LocalDateTimeline<>(intervaller.get(0), List.of("B")));
 
-        assertThat(timeline.intersection(intervaller.get(1))).isEqualTo(new LocalDateTimeline<>(intervaller.get(1), List.of("B", "A")));
+        assertThat(timeline.intersection(intervaller.get(1))).isEqualTo(new LocalDateTimeline<>(intervaller.get(1), List.of("A", "B")));
 
-        assertThat(timeline.intersection(intervaller.get(2))).isEqualTo(new LocalDateTimeline<>(intervaller.get(2), List.of("A")));
+        assertThat(timeline.intersection(intervaller.get(2))).isEqualTo(new LocalDateTimeline<>(intervaller.get(2), List.of("B")));
     }
 
     @Test
