@@ -335,8 +335,29 @@ class LocalDateTimelineTest {
         assertThat(timeline.intersection(intervaller.get(1))).isEqualTo(new LocalDateTimeline<>(intervaller.get(1), List.of("A", "B")));
 
         assertThat(timeline.intersection(intervaller.get(2))).isEqualTo(new LocalDateTimeline<>(intervaller.get(2), List.of("A")));
+    }
+
+    @Test
+    void skal_gruppere_per_segment_periode_med_innesluttet_periode_først() {
+        LocalDate d1 = LocalDate.of(2025, 1, 1);
+        LocalDate d2 = d1.plusDays(3);
+        LocalDate d3 = d1.plusDays(5);
+        LocalDate d4 = d1.plusDays(9);
 
 
+        List<LocalDateSegment<String>> segmenterMedOverlapp = List.of(
+                new LocalDateSegment<>(d2, d3, "B"),
+                new LocalDateSegment<>(d1, d4, "A"));
+
+        var timeline = LocalDateTimeline.buildGroupOverlappingSegments(segmenterMedOverlapp).compress();
+        List<LocalDateInterval> intervaller = List.copyOf(timeline.getLocalDateIntervals());
+        assertThat(intervaller).hasSize(3);
+
+        assertThat(timeline.intersection(intervaller.get(0))).isEqualTo(new LocalDateTimeline<>(intervaller.get(0), List.of("A")));
+
+        assertThat(timeline.intersection(intervaller.get(1))).isEqualTo(new LocalDateTimeline<>(intervaller.get(1), List.of("B", "A")));
+
+        assertThat(timeline.intersection(intervaller.get(2))).isEqualTo(new LocalDateTimeline<>(intervaller.get(2), List.of("A")));
     }
 
     @Test

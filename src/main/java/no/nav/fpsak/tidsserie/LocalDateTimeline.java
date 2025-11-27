@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -722,11 +723,11 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
 
         if (gapBak != null) {
             Optional<LocalDateInterval> overlap = datoInterval.overlap(gapBak);
-            overlap.ifPresent(di -> newSegments.add(new LocalDateSegment<V>(di, datoSegment.getValue())));
+            overlap.ifPresent(di -> newSegments.add(segmentSplitter.apply(di, datoSegment)));
         }
         if (gapForan != null) {
             Optional<LocalDateInterval> overlap = datoInterval.overlap(gapForan);
-            overlap.ifPresent(di -> newSegments.add(new LocalDateSegment<V>(di, datoSegment.getValue())));
+            overlap.ifPresent(di -> newSegments.add(segmentSplitter.apply(di, datoSegment)));
         }
     }
 
