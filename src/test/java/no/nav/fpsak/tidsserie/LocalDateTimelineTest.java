@@ -339,10 +339,10 @@ class LocalDateTimelineTest {
 
     @Test
     void skal_gruppere_per_segment_periode_med_innesluttet_periode_først() {
-        LocalDate d1 = LocalDate.of(2025, 1, 1);
-        LocalDate d2 = d1.plusDays(3);
-        LocalDate d3 = d1.plusDays(5);
-        LocalDate d4 = d1.plusDays(9);
+        LocalDate d1 = LocalDate.now();
+        LocalDate d2 = d1.plusDays(2);
+        LocalDate d3 = d2.plusDays(1);
+        LocalDate d4 = d3.plusDays(2);
 
 
         List<LocalDateSegment<String>> segmenterMedOverlapp = List.of(
