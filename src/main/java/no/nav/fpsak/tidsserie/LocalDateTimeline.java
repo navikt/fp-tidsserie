@@ -1016,11 +1016,11 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             if (di.equals(seg.getLocalDateInterval())) {
                 return seg;
             } else {
-                if(seg.getValue() instanceof List) {
+                if(seg.getValue() instanceof ArrayList) {
                     return new LocalDateSegment<>(di, (V) new ArrayList<>((List<?>) seg.getValue()));
-                } else if(seg.getValue() instanceof Set) {
+                } else if(seg.getValue() instanceof HashSet) {
                     return new LocalDateSegment<>(di, (V) new HashSet<>((Set<?>) seg.getValue()));
-                } else if(seg.getValue() instanceof Map) {
+                } else if(seg.getValue() instanceof HashMap) {
                     return new LocalDateSegment<>(di, (V) new HashMap<>((Map<?, ?>) seg.getValue()));
                 } else if(seg.getValue() instanceof Collection) {
                     throw new IllegalArgumentException(String.format("Collection type %s is not supported for default segment splitter", seg.getValue().getClass().getName()));
