@@ -1,6 +1,7 @@
 package no.nav.fpsak.tidsserie;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
@@ -1016,11 +1017,11 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             if (di.equals(seg.getLocalDateInterval())) {
                 return seg;
             } else {
-                if(seg.getValue() instanceof ArrayList) {
+                if(seg.getValue() instanceof List) {
                     return new LocalDateSegment<>(di, (V) new ArrayList<>((List<?>) seg.getValue()));
-                } else if(seg.getValue() instanceof HashSet) {
+                } else if(seg.getValue() instanceof Set) {
                     return new LocalDateSegment<>(di, (V) new HashSet<>((Set<?>) seg.getValue()));
-                } else if(seg.getValue() instanceof HashMap) {
+                } else if(seg.getValue() instanceof Map) {
                     return new LocalDateSegment<>(di, (V) new HashMap<>((Map<?, ?>) seg.getValue()));
                 } else if(seg.getValue() instanceof Collection) {
                     throw new IllegalArgumentException(String.format("Collection type %s is not supported for default segment splitter", seg.getValue().getClass().getName()));
