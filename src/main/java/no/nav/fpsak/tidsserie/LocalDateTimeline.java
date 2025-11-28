@@ -124,7 +124,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
                              SegmentSplitter<V> customSegmentSplitter) {
 
         Objects.requireNonNull(datoSegmenter, "datoSegmenter");
-        this.segmentSplitter = customSegmentSplitter != null ? customSegmentSplitter : new EqualValueSegmentSplitter<>();
+        this.segmentSplitter = customSegmentSplitter != null ? customSegmentSplitter : new DefaultSegmentSplitter<>();
         for (LocalDateSegment<V> ds : datoSegmenter) {
             add(ds, overlapCombinator);
         }
@@ -1000,6 +1000,24 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
                 return seg;
             } else {
                 return new LocalDateSegment<V>(di, seg.getValue());
+            }
+        }
+    }
+
+    /**
+     * Segment splitter som oppfører seg om createNewListOnSplit dersom verdien er en liste. Ellers som EqualValueSegmentSplitter.
+     */
+    private static final class DefaultSegmentSplitter<V> implements SegmentSplitter<V>, Serializable {
+        @Override
+        public LocalDateSegment<V> apply(LocalDateInterval di, LocalDateSegment<V> seg) {
+            if (di.equals(seg.getLocalDateInterval())) {
+                return seg;
+            } else {
+                if(seg.getValue() instanceof List) {
+                    return new LocalDateSegment<>(di, (V) new ArrayList<>((List<?>) seg.getValue()));
+                } else {
+                    return new LocalDateSegment<>(di, seg.getValue());
+                }
             }
         }
     }
