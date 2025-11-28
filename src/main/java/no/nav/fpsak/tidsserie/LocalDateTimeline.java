@@ -1,20 +1,24 @@
 package no.nav.fpsak.tidsserie;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -124,7 +128,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
                              SegmentSplitter<V> customSegmentSplitter) {
 
         Objects.requireNonNull(datoSegmenter, "datoSegmenter");
-        this.segmentSplitter = customSegmentSplitter != null ? customSegmentSplitter : new EqualValueSegmentSplitter<>();
+        this.segmentSplitter = customSegmentSplitter != null ? customSegmentSplitter : new DefaultSegmentSplitter<>();
         for (LocalDateSegment<V> ds : datoSegmenter) {
             add(ds, overlapCombinator);
         }
@@ -722,11 +726,11 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
 
         if (gapBak != null) {
             Optional<LocalDateInterval> overlap = datoInterval.overlap(gapBak);
-            overlap.ifPresent(di -> newSegments.add(new LocalDateSegment<V>(di, datoSegment.getValue())));
+            overlap.ifPresent(di -> newSegments.add(segmentSplitter.apply(di, datoSegment)));
         }
         if (gapForan != null) {
             Optional<LocalDateInterval> overlap = datoInterval.overlap(gapForan);
-            overlap.ifPresent(di -> newSegments.add(new LocalDateSegment<V>(di, datoSegment.getValue())));
+            overlap.ifPresent(di -> newSegments.add(segmentSplitter.apply(di, datoSegment)));
         }
     }
 
@@ -1000,6 +1004,31 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
                 return seg;
             } else {
                 return new LocalDateSegment<V>(di, seg.getValue());
+            }
+        }
+    }
+
+    /**
+     * Segment splitter som oppretter ny collection for støttede typer dersom verdien er en collection. Ellers som EqualValueSegmentSplitter.
+     */
+    private static final class DefaultSegmentSplitter<V> implements SegmentSplitter<V>, Serializable {
+        @Override
+        public LocalDateSegment<V> apply(LocalDateInterval di, LocalDateSegment<V> seg) {
+            if (di.equals(seg.getLocalDateInterval())) {
+                return seg;
+            } else {
+                if(seg.getValue() instanceof List) {
+                    return new LocalDateSegment<>(di, (V) new ArrayList<>((List<?>) seg.getValue()));
+                } else if(seg.getValue() instanceof Set) {
+                    return new LocalDateSegment<>(di, (V) new HashSet<>((Set<?>) seg.getValue()));
+                } else if(seg.getValue() instanceof Map) {
+                    return new LocalDateSegment<>(di, (V) new HashMap<>((Map<?, ?>) seg.getValue()));
+                } else if(seg.getValue() instanceof Collection) {
+                    throw new IllegalArgumentException(String.format("Collection type %s is not supported for default segment splitter", seg.getValue().getClass().getName()));
+                }
+                else {
+                    return new LocalDateSegment<>(di, seg.getValue());
+                }
             }
         }
     }
