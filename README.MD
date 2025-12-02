@@ -38,7 +38,7 @@ Flere tidsserier (`LocalDateTimeline`) kan kombineres på ulike måter:
 * Kombinere verdier
 * Aritmetiske operasjoner  (summere, negere, multiplisere, dividere) verdier  periodene
 * Boolske operassjoner (eks. finne boolsk resultat per periode)
-* Velge alle perioder fra ene tidsserien med matchende data i begge, ene eller andre tidsserie
+* Velge alle perioder fra ene tidsserien med matchende data i begge, ene eller andre tidsserie.
 
 Alle operasjoner som utføres på tidsserier er abstrahert bort ved et funksjonsuttrykk som kan spesifiseres. Vanlige operasjoner er lagt til i `StandardCombinators`, deriblant:
 * `sum`
