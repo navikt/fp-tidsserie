@@ -9,4 +9,8 @@ updates:
     directory: "/"
     schedule:
       interval: daily
+    cooldown:
+      default-days: 7
+      exclude:
+        - "no.nav.*"
     open-pull-requests-limit: 20
