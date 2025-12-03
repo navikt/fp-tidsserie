@@ -16,6 +16,7 @@ class LocalDateIntervalTest {
         LocalDate d2 = d1.plusDays(3);
         LocalDate d3 = d2;
         LocalDate d4 = d3.plusDays(3);
+        
         LocalDateInterval int1 = new LocalDateInterval(d1, d2);
         LocalDateInterval int2 = new LocalDateInterval(d3, d4);
 
