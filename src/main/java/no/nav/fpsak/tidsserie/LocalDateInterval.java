@@ -19,8 +19,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiPredicate;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 import no.nav.fpsak.tidsserie.json.LocalDateIntervalFormatters;
 
