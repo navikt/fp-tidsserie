@@ -8,9 +8,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -18,6 +22,8 @@ import java.util.NavigableSet;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.SequencedMap;
+import java.util.SequencedSet;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -1011,27 +1017,54 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
     /**
      * Segment splitter som oppretter ny collection for støttede typer dersom verdien er en collection. Ellers som EqualValueSegmentSplitter.
      */
-    private static final class DefaultSegmentSplitter<V> implements SegmentSplitter<V>, Serializable {
+    static final class DefaultSegmentSplitter<V> implements SegmentSplitter<V>, Serializable {
         @Override
         public LocalDateSegment<V> apply(LocalDateInterval di, LocalDateSegment<V> seg) {
             if (di.equals(seg.getLocalDateInterval())) {
                 return seg;
-            } else {
-                if(seg.getValue() instanceof List) {
-                    return new LocalDateSegment<>(di, (V) new ArrayList<>((List<?>) seg.getValue()));
-                } else if(seg.getValue() instanceof Set) {
-                    return new LocalDateSegment<>(di, (V) new HashSet<>((Set<?>) seg.getValue()));
-                } else if(seg.getValue() instanceof Map) {
-                    return new LocalDateSegment<>(di, (V) new HashMap<>((Map<?, ?>) seg.getValue()));
-                } else if(seg.getValue() instanceof Collection) {
-                    throw new IllegalArgumentException(String.format("Collection type %s is not supported for default segment splitter", seg.getValue().getClass().getName()));
+            }
+            V gammelVerdi = seg.getValue();
+            if (gammelVerdi == null){
+                return new LocalDateSegment<>(di, null);
+            }
+            Object nyVerdi = switch (gammelVerdi) {
+                case List<?> l -> {
+                    verifyNotFromJavaConcurrent(l);
+                    yield new ArrayList<>(l);
                 }
-                else {
-                    return new LocalDateSegment<>(di, seg.getValue());
+                case Set<?> s -> {
+                    verifyNotFromJavaConcurrent(s);
+                    yield switch (s) {
+                        case TreeSet<?> ts -> new TreeSet<>(ts);
+                        case EnumSet<?> es -> EnumSet.copyOf(es);
+                        case SequencedSet<?> seq -> new LinkedHashSet<>(seq);
+                        default -> new HashSet<>(s);
+                    };
                 }
+                case Map<?, ?> m -> {
+                    verifyNotFromJavaConcurrent(m);
+                    yield switch (m) {
+                        case TreeMap<?, ?> tm -> new TreeMap<>(tm);
+                        case EnumMap<?, ?> em -> new EnumMap<>(em);
+                        case SequencedMap<?, ?> seq -> new LinkedHashMap<>(seq);
+                        default -> new HashMap<>(m);
+                    };
+                }
+                case Collection<?> c ->
+                        throw new IllegalArgumentException(String.format("Collection type %s is not supported for default segment splitter", c.getClass().getName()));
+                default -> gammelVerdi;
+            };
+            return new LocalDateSegment<>(di, (V) nyVerdi);
+        }
+
+
+        static void verifyNotFromJavaConcurrent(Object obj) {
+            if (obj.getClass().getPackageName().equals("java.util.concurrent")) {
+                throw new IllegalArgumentException(String.format("Collection/Map type %s is not supported for default segment splitter", obj.getClass().getName()));
             }
         }
     }
+
 
     /**
      * Kombinerer løpende sammenhengende intervaller med samme verdi. Forutsetter en timeline der ingen segmenter er
