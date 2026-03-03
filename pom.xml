@@ -66,4 +66,10 @@
             <url>https://maven.pkg.github.com/navikt/fp-tidsserie/</url>
         </repository>
     </distributionManagement>
+    <repositories>
+        <repository>
+            <id>github</id> <!-- OBS: Brukes også av fp-gha-workflows for action/setup-java -->
+            <url>https://maven.pkg.github.com/navikt/fp-felles</url> <!-- Samme url som brukes i dependabot.yml -->
+        </repository>
+    </repositories>
 </project>
