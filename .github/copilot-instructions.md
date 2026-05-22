@@ -31,6 +31,8 @@ collected into timelines supporting set operations.
 
 Auto-handles knekkpunkter (split/merge segments as ranges change).
 
+LocalDateInterval provides utilites for workdays and weekends - including adjacent friday-monday handling.
+
 ## ⚠️ Aggregate values
 
 When a segment's value is an **aggregate tied to interval duration**
@@ -44,7 +46,7 @@ Safe categories:
 - Boolean / categorical — duration-independent
 
 Risky categories:
-- Total amounts, accumulated days, sums — duration-dependent
+- Total amounts, accumulated days, sums, Beløp/Beloep — duration-dependent
 
 ## Out of scope
 
