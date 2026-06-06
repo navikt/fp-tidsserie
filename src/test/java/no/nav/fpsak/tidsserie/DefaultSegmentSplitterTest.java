@@ -13,7 +13,7 @@ import java.util.TreeSet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DefaultSegmentSplitterTest {
+class DefaultSegmentSplitterTest {
 
     LocalDate dag1 = LocalDate.now();
     LocalDate dag2 = dag1.plusDays(1);
