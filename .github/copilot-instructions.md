@@ -1,62 +1,46 @@
 # fp-tidsserie
 
-Library for periodised data — segments with fom/tom date range and a value,
-collected into timelines supporting set operations.
+Library for periodized data represented as timelines of date segments. Not intended for statistical time-series analysis.
 
-## Context
+## Shared context
 
-- [fp-context](https://github.com/navikt/fp-context) — team domain,
-  architecture, conventions. Source of truth.
-- Consumer view:
-  [`architecture/team-libraries.md`](https://github.com/navikt/fp-context/blob/main/architecture/team-libraries.md).
-- Copilot Space: navikt / **TeamForeldrepenger**.
+- Source of truth for shared domain, architecture, and conventions: `navikt/fp-context`
+- Copilot Space: `navikt/TeamForeldrepenger`
+- Consumer view of team libraries: `fp-context/architecture/team-libraries.md`
 
 ## Core types
 
-| Type | Purpose |
-|------|---------|
-| `LocalDateSegment<V>` | Single fom-tom interval with value |
-| `LocalDateTimeline<V>` | Ordered, non-overlapping set of segments |
-| `LocalDateInterval` | fom-tom helper |
+| Type | Purpose                                                       |
+|---|---------------------------------------------------------------|
+| `LocalDateSegment<V>` | Single fom-tom interval with a value                          |
+| `LocalDateTimeline<V>` | Ordered, non-overlapping set of segments                      |
+| `LocalDateInterval` | fom-tom helper; utils for workdays, weekends, adjacency/abuts |
 
 ## Operations
 
-| Category | Examples |
-|----------|----------|
-| Set ops | union, intersection, disjoint, minus |
-| Combine | Combine two timelines with a custom `LocalDateSegmentCombinator` |
-| Arithmetic | sum, negate, multiply, divide (per period) |
-| Boolean | per-period boolean result |
-| Compress | merge adjacent segments with equal values |
+| Category       | Examples |
+|----------------|----------|
+| Set operations | union, intersection, disjoint, minus |
+| Combine        | Merge two timelines |
+| Arithmetic     | sum, negate, multiply, divide per period |
+| Boolean        | per-period boolean result |
+| Compress       | merge adjacent segments with equal values |
 
-Auto-handles knekkpunkter (split/merge segments as ranges change).
+Creating and operating on `LocalDateTimeline<V>` may split segments. Some common options
+- `LocalDateSegmentCombinator<T, V, R>` - method for handling time-overlapping segments 
+- `SegmentSplitter<V>` - custom splitting of segments during operations, needed to rescale duration-dependent values to new interval 
+- `JoinStyle` - how to combine timelines using predicates on presence of segments in the timelines
 
-LocalDateInterval provides utilites for workdays and weekends - including adjacent friday-monday handling.
+Recommend using combinators from the collection `StandardCombinators` over local implementations of `LocalDateSegmentCombinator<T, V, R>`.
 
-## ⚠️ Aggregate values
+Method `compress` merges adjacent and equal segments, and can be called with custom adjacency and equality predicates, and a custom merge-method to combine duration-dependent values
 
-When a segment's value is an **aggregate tied to interval duration**
-(sums, day counts, totals), splits and merges do **not** automatically
-rescale. The custom combiner / mapper must recompute the aggregate after
-any segmentation change. Be especially careful with `compress`, `combine`,
-and `intersection` on such values.
+## Aggregate or duration-dependent values
 
-Safe categories:
-- Rate-like values (dagsats, sats) — duration-independent
-- Boolean / categorical — duration-independent
+When a segment value is an aggregate tied to interval duration, splits and merges do not automatically rescale the value. Custom combiners or mappers must recompute the aggregate after segmentation changes.
+- Safe categories: rate-like values such as dagsats, boolean, enums or categorical values
+- Risky categories: total amounts and sums, accumulated days
 
-Risky categories:
-- Total amounts, accumulated days, sums, Beløp/Beloep — duration-dependent
+## Release and use
 
-## Out of scope
-
-Not for statistical time-series analysis (no moving averages, no
-sampling, no large-dataset analytics).
-
-## Release
-
-SemVer; consumed by fp-uttak, fp-kalkulus, fp-sak and others via fp-bom.
-
-## Tech
-
-Java 25, Maven, no external runtime deps beyond JDK.
+SemVer release; version not included in `fp-bom`; imported directly by many repos in the foreldrepenger ecosystem
