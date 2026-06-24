@@ -21,6 +21,7 @@ import java.util.NavigableSet;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.SequencedCollection;
 import java.util.SequencedMap;
 import java.util.SequencedSet;
 import java.util.Set;
@@ -60,7 +61,8 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
     public static final LocalDateTimeline EMPTY_TIMELINE = new LocalDateTimeline<>(Collections.emptyList());
     private static final SegmentSplitter<Object> DEFAULT_SEGMENT_SPLITTER = new DefaultSegmentSplitter<>();
 
-    private final List<LocalDateSegment<V>> segments;
+    // Invariant: Er sortert etter fom-dato. Ingen overlappende segment.
+    private final ArrayList<LocalDateSegment<V>> segments;
     /**
      * Funksjon for å beregne partielle datosegmenter der input interval delvis overlapper segmentets intervall. <br>
      * Begge
@@ -137,8 +139,8 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         }
     }
 
-    private static <V> List<LocalDateSegment<V>> splittOgHåndterOverlapp(Collection<LocalDateSegment<V>> inputSegmenter, SegmentSplitter<V> segmentSplitter, LocalDateSegmentCombinator<V, V, V> overlapCombinator) {
-        List<LocalDateSegment<V>> resultat = new ArrayList<>();
+    private static <V> ArrayList<LocalDateSegment<V>> splittOgHåndterOverlapp(Collection<LocalDateSegment<V>> inputSegmenter, SegmentSplitter<V> segmentSplitter, LocalDateSegmentCombinator<V, V, V> overlapCombinator) {
+        ArrayList<LocalDateSegment<V>> resultat = new ArrayList<>();
         ArrayList<LocalDateSegment<V>> inputListe = inputSegmenter instanceof ArrayList<LocalDateSegment<V>> inputSegmentListe ? inputSegmentListe : new ArrayList<>(inputSegmenter);
         NavigableMap<LocalDate, List<Integer>> segmenterPrStartdato = grupperSegmenter(inputListe, LocalDateSegment::getFom);
         NavigableMap<LocalDate, List<Integer>> segmenterPrSluttdato = grupperSegmenter(inputListe, LocalDateSegment::getTom);
@@ -582,22 +584,14 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         if (isEmpty()) {
             throw new IllegalStateException("Timeline is empty"); //$NON-NLS-1$
         }
-        if (segments instanceof ArrayList<LocalDateSegment<V>> segmenterSomListe) {
-            return segmenterSomListe.get(segmenterSomListe.size() - 1).getTom();
-        }
-        throw new IllegalArgumentException("segments var av ikke-støttet type " + segments.getClass());
-
+        return segments.getLast().getTom();
     }
 
     public LocalDate getMinLocalDate() {
         if (isEmpty()) {
             throw new IllegalStateException("Timeline is empty"); //$NON-NLS-1$
         }
-        if (segments instanceof ArrayList<LocalDateSegment<V>> segmenterSomListe) {
-            return segmenterSomListe.get(0).getFom();
-        }
-        throw new IllegalArgumentException("segments var av ikke-støttet type " + segments.getClass());
-
+        return segments.getFirst().getFom();
     }
 
     public LocalDateSegment<V> getSegment(LocalDateInterval datoInterval) {
@@ -774,8 +768,8 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         return Collections.unmodifiableNavigableSet(new TreeSet<>(segments));
     }
 
-    public Collection<LocalDateSegment<V>> segmenter() {
-        return Collections.unmodifiableCollection(segments);
+    public SequencedCollection<LocalDateSegment<V>> segmenter() {
+        return Collections.unmodifiableSequencedCollection(segments);
     }
 
 
