@@ -1,19 +1,16 @@
 package no.nav.fpsak.tidsserie.json;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.deser.std.UntypedObjectDeserializer;
-import com.fasterxml.jackson.databind.jsontype.TypeDeserializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.*;
+import tools.jackson.databind.deser.jdk.UntypedObjectDeserializer;
+import tools.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.ser.std.StdSerializer;
+
 import no.nav.fpsak.tidsserie.LocalDateInterval;
 import no.nav.fpsak.tidsserie.LocalDateSegment;
-
-import java.io.IOException;
 
 /**
  * Custom serializer/deserializer for LocalDateSement for å håndtere deserialisering av nøstede objekter uten å forurense json struktur
@@ -22,7 +19,7 @@ import java.io.IOException;
  */
 public class LocalDateSegmentFormatters {
 
-    public static class Deserializer extends StdDeserializer<LocalDateSegment<?>> implements ContextualDeserializer {
+    public static class Deserializer extends StdDeserializer<LocalDateSegment<?>>  {
         private JavaType valueType;
 
         public Deserializer() {
@@ -34,43 +31,19 @@ public class LocalDateSegmentFormatters {
             this.valueType = valueType;
         }
 
-        @Override
-        public Object deserializeWithType(JsonParser p, DeserializationContext ctxt, TypeDeserializer typeDeserializer) throws IOException {
-            // TODO Auto-generated method stub
-            return super.deserializeWithType(p, ctxt, typeDeserializer);
-        }
-
         @SuppressWarnings("rawtypes")
         @Override
-        public LocalDateSegment deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JsonProcessingException {
+        public LocalDateSegment deserialize(JsonParser p, DeserializationContext ctx) throws JacksonException {
             if (p.isExpectedStartArrayToken()) {
                 JsonToken t = p.nextToken();
                 if (t == JsonToken.END_ARRAY) {
                     return null;
                 }
-                String fom = null;
-                if (p.hasToken(JsonToken.VALUE_STRING)) {
-                    fom = p.getText().trim();
-                }
-                t = p.nextToken();
-                String tom = null;
-                if (p.hasToken(JsonToken.VALUE_STRING)) {
-                    tom = p.getText().trim();
-                }
 
-                LocalDateInterval dateInterval = LocalDateInterval.parseFrom(fom, tom);
+                LocalDateInterval dateInterval = LocalDateIntervalFormatters.Deserializer.localDateInterval(p);
 
-                Object val = null;
-                t = p.nextToken();
-                if (p.hasToken(JsonToken.START_OBJECT)) {
-                    val = p.getCodec().readValue(p, valueType);
-                } else {
-                    if (valueType != null) {
-                        val = p.getCodec().readValue(p, valueType);
-                    } else {
-                        val = new UntypedObjectDeserializer(null, null).deserialize(p, ctx);
-                    }
-                }
+                p.nextToken();
+                Object val = getValue(p, ctx);
 
                 t = p.nextToken();
                 if (t != JsonToken.END_ARRAY) {
@@ -82,8 +55,20 @@ public class LocalDateSegmentFormatters {
             throw ctx.wrongTokenException(p, handledType(), JsonToken.VALUE_STRING, "Expected array or string.");
         }
 
+        private Object getValue(JsonParser p, DeserializationContext ctx) throws JacksonException {
+            if (p.hasToken(JsonToken.START_OBJECT)) {
+                return p.readValueAs(valueType);
+            } else {
+                if (valueType != null) {
+                    return p.readValueAs(valueType);
+                } else {
+                    return new UntypedObjectDeserializer(null, null).deserialize(p, ctx);
+                }
+            }
+        }
+
         @Override
-        public JsonDeserializer<?> createContextual(DeserializationContext ctx, BeanProperty property) throws JsonMappingException {
+        public ValueDeserializer<?> createContextual(DeserializationContext ctx, BeanProperty property) throws JacksonException {
             JavaType wrapperType;
             if (property == null) {
                 wrapperType = ctx.getContextualType();
@@ -102,15 +87,16 @@ public class LocalDateSegmentFormatters {
         }
 
         @Override
-        public void serialize(LocalDateSegment value, JsonGenerator g, SerializerProvider provider)
-                throws IOException {
-            g.writeStartArray();
-            LocalDateInterval dateInterval = value.getLocalDateInterval();
-            g.writeObject(LocalDateInterval.formatDate(dateInterval.getFomDato(), "-"));
-            g.writeObject(LocalDateInterval.formatDate(dateInterval.getTomDato(), "-"));
+        public void serialize(LocalDateSegment value, JsonGenerator g, SerializationContext provider)
+                throws JacksonException {
+            localDateSegment(value, g);
+        }
 
+        public static void localDateSegment(LocalDateSegment value, JsonGenerator g) throws JacksonException {
+            g.writeStartArray();
+            LocalDateIntervalFormatters.Serializer.localDateInterval(value.getLocalDateInterval(), g);
             if (value.getValue() != null) {
-                g.writeObject(value.getValue());
+                g.writePOJO(value.getValue());
             }
             g.writeEndArray();
         }
