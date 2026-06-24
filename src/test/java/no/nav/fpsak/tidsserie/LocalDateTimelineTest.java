@@ -72,6 +72,21 @@ class LocalDateTimelineTest {
     }
 
     @Test
+    void skal_ha_siste_element_i_ctor_som_rhs_i_overlapp_combinator() {
+        LocalDate d1 = today.plusDays(1);
+        LocalDate d2 = today.plusDays(2);
+        LocalDateTimeline<Integer> tidslinje = new LocalDateTimeline<>(List.of(
+                new LocalDateSegment<>(d2, d2, 1),
+                new LocalDateSegment<>(d1, d2, 2)),
+                StandardCombinators::leftOnly);
+
+        assertThat(tidslinje.toSegments()).containsExactly(
+                new LocalDateSegment<>(d1, d1, 2),
+                new LocalDateSegment<>(d2, d2, 1)
+        );
+    }
+
+    @Test
     void skal_bruke_custom_segment_splitter_og_combiner_når_angitt_på_overlappende_segmenter_i_konstruktør() {
         //tidslinje hvor verdi er totalverdi for perioden
         //i eksempelet er det dagsats 1 hele uka, bortsett fra en dag midt i uka, og der er det 3
@@ -443,6 +458,15 @@ class LocalDateTimelineTest {
     }
 
     @Test
+    void skal_håndtere_flere_identiske_segmenter() {
+        List<LocalDateSegment<String>> likeSegmenter = List.of(new LocalDateSegment<>(LocalDate.MIN, LocalDate.MAX, "A"),
+                new LocalDateSegment<>(LocalDate.MIN, LocalDate.MAX, "A"),
+                new LocalDateSegment<>(LocalDate.MIN, LocalDate.MAX, "A"));
+        LocalDateTimeline<String> resultat = new LocalDateTimeline<>(likeSegmenter, StandardCombinators::concat);
+        assertThat(resultat).isEqualTo(new LocalDateTimeline<>(LocalDate.MIN, LocalDate.MAX, "AAA"));
+    }
+
+    @Test
     void skal_håndtere_sendeste_mulige_dato() {
         LocalDateTimeline<String> tidslinjeA = new LocalDateTimeline<>(LocalDate.MAX, LocalDate.MAX, "A");
         LocalDateTimeline<String> tidslinjeB = new LocalDateTimeline<>(LocalDate.MAX, LocalDate.MAX, "B");
@@ -482,29 +506,6 @@ class LocalDateTimelineTest {
 
         assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(LocalDate.MIN, tom))).isFalse();
         assertThat(tidslinjeA.isTimelineOutsideInterval(new LocalDateInterval(fom, LocalDate.MAX))).isFalse();
-    }
-
-    @Disabled("Micro performance test - kun for spesielt interesserte! Kan brukes til å avsjekke forbedringer i join algoritme")
-    @Test
-    void kjapp_ytelse_test() {
-
-        List<LocalDateSegment<String>> segmenter = new ArrayList<>();
-
-        LocalDate dag = LocalDate.now();
-
-        for (int i = 0; i < 1000; i++) {
-            segmenter.add(new LocalDateSegment<>(new LocalDateInterval(dag, dag), dag.toString()));
-            dag = dag.plusDays(1);
-        }
-
-        long start = System.currentTimeMillis();
-
-        LocalDateTimeline<String> timeline = new LocalDateTimeline<>(segmenter);
-        LocalDateTimeline<String> intersection = timeline.intersection(new LocalDateTimeline<>(segmenter),
-                StandardCombinators::coalesceLeftHandSide);
-        assertThat(intersection).isEqualTo(timeline);
-
-        System.out.println(System.currentTimeMillis() - start);
     }
 
     private LocalDateTimeline<String> basicContinuousTimeline() {
