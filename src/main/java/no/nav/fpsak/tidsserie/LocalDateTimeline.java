@@ -149,9 +149,8 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         KnekkpunktIterator knekkpunktIterator = new KnekkpunktIterator(segmenterPrStartdato.navigableKeySet(), segmenterPrSluttdato.navigableKeySet());
         LocalDate fom = knekkpunktIterator.next();
         while (fom != null && knekkpunktIterator.hasNext()) {
-            boolean pastEndOfTime = knekkpunktIterator.nextIsPastEndOfTime();
-            LocalDate nesteFom = pastEndOfTime ? null : knekkpunktIterator.next();
-            LocalDate tom = pastEndOfTime ? LocalDate.MAX : nesteFom.minusDays(1);
+            LocalDate nesteFom = knekkpunktIterator.next();
+            LocalDate tom = nesteFom == null ? LocalDate.MAX : nesteFom.minusDays(1);
 
             if (!aktiveSegmenter.isEmpty()) {
                 segmenterPrSluttdato.getOrDefault(fom.minusDays(1), List.of()).forEach(aktiveSegmenter::remove);
@@ -202,22 +201,17 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             this(startdatoer.iterator(), sluttdatoer.iterator());
         }
 
-        public boolean nextIsPastEndOfTime() {
-            boolean harFlereStarttidspunkt = startIterator.hasNext();
-            boolean harFlereSluttidspunktFørTidenesEnde = sluttIterator.hasNext() || (!nesteSlutt.equals(LocalDate.MAX));
-            return !harFlereStarttidspunkt && !harFlereSluttidspunktFørTidenesEnde;
-        }
-
+        /** returnerer null dersom neste er etter LocalDate.MAX. Kaster exception om det ikke er flere elementer igjen **/
         public LocalDate next() {
             if (nesteSlutt == null && nesteStart == null) {
                 throw new NoSuchElementException("Ikke flere verdier igjen");
             }
             boolean velgStartVerdi = nesteStart != null && (nesteSlutt == null || !nesteStart.isAfter(nesteSlutt));
-            LocalDate valgtDato = velgStartVerdi ? nesteStart : nesteSlutt.plusDays(1);
+            LocalDate valgtDato = velgStartVerdi ? nesteStart : (nesteSlutt.equals(LocalDate.MAX) ? null : nesteSlutt.plusDays(1));
             if (nesteStart != null && !nesteStart.isAfter(valgtDato)) {
                 nesteStart = startIterator.hasNext() ? startIterator.next() : null;
             }
-            if (nesteSlutt != null && nesteSlutt.isBefore(valgtDato)) {
+            if (nesteSlutt != null && (valgtDato == null || nesteSlutt.isBefore(valgtDato))) {
                 nesteSlutt = sluttIterator.hasNext() ? sluttIterator.next() : null;
             }
             return valgtDato;
@@ -333,16 +327,9 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
             boolean harLhs = lhs != null && lhs.getLocalDateInterval().contains(fom);
             boolean harRhs = rhs != null && rhs.getLocalDateInterval().contains(fom);
 
-            boolean maxtime = knekkpunktIterator.nextIsPastEndOfTime();
-            LocalDate neste;
-            LocalDate tom;
-            if (maxtime) {
-                neste = null;
-                tom = LocalDate.MAX;
-            } else {
-                neste = knekkpunktIterator.next();
-                tom = neste.minusDays(1);
-            }
+
+            LocalDate neste = knekkpunktIterator.next();
+            LocalDate tom = neste == null ? LocalDate.MAX : neste.minusDays(1);
             if (combinationStyle.accept(harLhs, harRhs)) {
                 LocalDateInterval periode = new LocalDateInterval(fom, tom);
                 LocalDateSegment<V> tilpassetLhsSegment = tilpassSegment(harLhs, lhs, periode, this.segmentSplitter);
