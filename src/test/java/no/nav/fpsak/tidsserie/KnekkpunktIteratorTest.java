@@ -4,11 +4,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
-import java.util.NavigableSet;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 public class KnekkpunktIteratorTest {
 
@@ -27,7 +23,23 @@ public class KnekkpunktIteratorTest {
         Assertions.assertThat(iterator.hasNext()).isTrue();
         Assertions.assertThat(iterator.next()).isEqualTo(LocalDate.of(2023, 1, 1));
         Assertions.assertThat(iterator.hasNext()).isFalse();
+    }
 
+    @Test
+    void skal_fungere_når_begge_tidslinjer_slutter_på_LocaldateMax() {
+        NavigableSet<LocalDate> fomDatoer = new TreeSet<>(Set.of(LocalDate.of(2022, 12, 26), LocalDate.of(2022, 12, 29)));
+        NavigableSet<LocalDate> tomDatoer = new TreeSet<>(Set.of(LocalDate.MAX));
+
+        LocalDateTimeline.KnekkpunktIterator iterator = new LocalDateTimeline.KnekkpunktIterator(fomDatoer, tomDatoer);
+        Assertions.assertThat(iterator.hasNext()).isTrue();
+        Assertions.assertThat(iterator.next()).isEqualTo(LocalDate.of(2022, 12, 26));
+        Assertions.assertThat(iterator.hasNext()).isTrue();
+        Assertions.assertThat(iterator.next()).isEqualTo(LocalDate.of(2022, 12, 29));
+        Assertions.assertThat(iterator.hasNext()).isTrue();
+        Assertions.assertThat(iterator.next()).isNull(); //null representerer at neste startpunkt er LocalDate.MAX+1
+        Assertions.assertThat(iterator.hasNext()).isFalse();
+
+        Assertions.assertThatThrownBy(iterator::next).isInstanceOf(NoSuchElementException.class).hasMessageContaining("Ikke flere verdier igjen");
     }
 
     @Test

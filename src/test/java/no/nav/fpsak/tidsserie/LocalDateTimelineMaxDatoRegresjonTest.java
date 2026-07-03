@@ -15,18 +15,10 @@ class LocalDateTimelineMaxDatoRegresjonTest {
     private final LocalDate fom1 = LocalDate.of(2024, 1, 1);
     private final LocalDate fom2 = LocalDate.of(2024, 1, 11);
 
-    private LocalDateTimeline<String> apentSegmentA() {
-        return new LocalDateTimeline<>(List.of(new LocalDateSegment<>(fom1, LocalDate.MAX, "A")));
-    }
-
-    private LocalDateTimeline<String> apentSegmentB() {
-        return new LocalDateTimeline<>(List.of(new LocalDateSegment<>(fom2, LocalDate.MAX, "B")));
-    }
-
     @Test
     void inner_join_skal_gi_kombinert_segment_når_begge_tidslinjer_er_åpne_til_max() {
-        LocalDateTimeline<String> a = apentSegmentA();
-        LocalDateTimeline<String> b = apentSegmentB();
+        LocalDateTimeline<String> a = new LocalDateTimeline<>(List.of(new LocalDateSegment<>(fom1, LocalDate.MAX, "A")));
+        LocalDateTimeline<String> b = new LocalDateTimeline<>(List.of(new LocalDateSegment<>(fom2, LocalDate.MAX, "B")));
 
         LocalDateTimeline<String> resultat = a.combine(b, StandardCombinators::concat, JoinStyle.INNER_JOIN);
 
@@ -37,8 +29,8 @@ class LocalDateTimelineMaxDatoRegresjonTest {
 
     @Test
     void right_join_skal_gi_kombinert_segment_når_begge_tidslinjer_er_åpne_til_max() {
-        LocalDateTimeline<String> a = apentSegmentA();
-        LocalDateTimeline<String> b = apentSegmentB();
+        LocalDateTimeline<String> a = new LocalDateTimeline<>(List.of(new LocalDateSegment<>(fom1, LocalDate.MAX, "A")));
+        LocalDateTimeline<String> b = new LocalDateTimeline<>(List.of(new LocalDateSegment<>(fom2, LocalDate.MAX, "B")));
 
         LocalDateTimeline<String> resultat = a.combine(b, StandardCombinators::concat, JoinStyle.RIGHT_JOIN);
 
@@ -49,8 +41,8 @@ class LocalDateTimelineMaxDatoRegresjonTest {
 
     @Test
     void cross_join_skal_beholde_alle_tre_periodene_når_begge_tidslinjer_er_åpne_til_max() {
-        LocalDateTimeline<String> a = apentSegmentA();
-        LocalDateTimeline<String> b = apentSegmentB();
+        LocalDateTimeline<String> a = new LocalDateTimeline<>(List.of(new LocalDateSegment<>(fom1, LocalDate.MAX, "A")));
+        LocalDateTimeline<String> b = new LocalDateTimeline<>(List.of(new LocalDateSegment<>(fom2, LocalDate.MAX, "B")));
 
         LocalDateTimeline<String> resultat = a.combine(b, StandardCombinators::concat, JoinStyle.CROSS_JOIN);
 
@@ -63,7 +55,7 @@ class LocalDateTimelineMaxDatoRegresjonTest {
 
     @Test
     void intersection_skal_gi_riktig_snitt_når_egen_tidslinje_er_åpen_til_max() {
-        LocalDateTimeline<String> a = apentSegmentA();
+        LocalDateTimeline<String> a = new LocalDateTimeline<>(List.of(new LocalDateSegment<>(fom1, LocalDate.MAX, "A")));
         LocalDateTimeline<String> annen = new LocalDateTimeline<>(
                 List.of(new LocalDateSegment<>(fom2, fom2.plusDays(9), "B")));
 
