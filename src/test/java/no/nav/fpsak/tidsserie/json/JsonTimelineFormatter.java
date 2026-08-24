@@ -48,4 +48,15 @@ public class JsonTimelineFormatter {
         }
     }
 
+    /** For å deserialisere klasser med generic parametere.*/
+    public <T> T fromJson(String src, Class<T> resultClass, Class<?> parametricClass, Class<?> parameterClass) {
+        try {
+            JavaType parametricTypeInner = OM.getTypeFactory().constructParametricType(parametricClass, parameterClass);
+            JavaType parametricTypeOuter = OM.getTypeFactory().constructParametricType(resultClass, parametricTypeInner);
+            return OM.readValue(src, parametricTypeOuter);
+        } catch (JacksonException e) {
+            throw new IllegalArgumentException(String.format("Kunne ikke deserialisere json til [%s]: %s", resultClass.getName(), src), e);
+        }
+    }
+
 }
