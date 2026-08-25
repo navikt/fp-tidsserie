@@ -75,12 +75,7 @@ class FormatterUtils {
     }
 
     static JavaType getJavaType(DeserializationContext ctx, BeanProperty property) throws JacksonException {
-        JavaType wrapperType;
-        if (property == null) {
-            wrapperType = ctx.getContextualType();
-        } else {
-            wrapperType = property.getType();
-        }
+        JavaType wrapperType = property != null ? property.getType() : ctx.getContextualType();
         return wrapperType.containedType(0);
 
     }
