@@ -33,15 +33,9 @@ class FormatterUtils {
     }
 
     static LocalDateInterval deserializeLocalDateInterval(JsonParser p) throws JacksonException {
-        String fom = null;
-        if (p.hasToken(JsonToken.VALUE_STRING)) {
-            fom = p.getString().trim();
-        }
+        String fom = p.hasToken(JsonToken.VALUE_STRING) ? p.getString().trim() : null;
         p.nextToken();
-        String tom = null;
-        if (p.hasToken(JsonToken.VALUE_STRING)) {
-            tom = p.getString().trim();
-        }
+        String tom = p.hasToken(JsonToken.VALUE_STRING) ? p.getString().trim() : null;
         return LocalDateInterval.parseFrom(fom, tom);
     }
 
