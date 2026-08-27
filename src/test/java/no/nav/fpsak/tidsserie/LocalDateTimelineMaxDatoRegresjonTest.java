@@ -23,7 +23,7 @@ class LocalDateTimelineMaxDatoRegresjonTest {
         LocalDateTimeline<String> resultat = a.combine(b, StandardCombinators::concat, JoinStyle.INNER_JOIN);
 
         // BUG: resultatet blir tomt i 2.7.5, korrekt skal være ett segment fra fom2 til MAX
-        assertThat(resultat.toSegments()).containsExactly(
+        assertThat(resultat.segmenter()).containsExactly(
                 new LocalDateSegment<>(fom2, LocalDate.MAX, "AB"));
     }
 
@@ -35,7 +35,7 @@ class LocalDateTimelineMaxDatoRegresjonTest {
         LocalDateTimeline<String> resultat = a.combine(b, StandardCombinators::concat, JoinStyle.RIGHT_JOIN);
 
         // BUG: resultatet blir tomt i 2.7.5
-        assertThat(resultat.toSegments()).containsExactly(
+        assertThat(resultat.segmenter()).containsExactly(
                 new LocalDateSegment<>(fom2, LocalDate.MAX, "AB"));
     }
 
@@ -48,7 +48,7 @@ class LocalDateTimelineMaxDatoRegresjonTest {
 
         // BUG: siste periode (fom2 -> MAX, verdi AB) forsvinner i 2.7.5 — hele tidslinjen blir
         // liggende igjen som ett udelt "A"-segment fra fom1 til MAX.
-        assertThat(resultat.toSegments()).containsExactly(
+        assertThat(resultat.segmenter()).containsExactly(
                 new LocalDateSegment<>(fom1, fom2.minusDays(1), "A"),
                 new LocalDateSegment<>(fom2, LocalDate.MAX, "AB"));
     }
@@ -61,7 +61,7 @@ class LocalDateTimelineMaxDatoRegresjonTest {
 
         LocalDateTimeline<String> resultat = a.intersection(annen, StandardCombinators::concat);
 
-        assertThat(resultat.toSegments()).containsExactly(
+        assertThat(resultat.segmenter()).containsExactly(
                 new LocalDateSegment<>(fom2, fom2.plusDays(9), "AB"));
     }
 }
