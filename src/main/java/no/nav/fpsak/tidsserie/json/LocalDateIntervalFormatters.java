@@ -1,20 +1,20 @@
 package no.nav.fpsak.tidsserie.json;
 
-import java.io.IOException;
-
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-
 import no.nav.fpsak.tidsserie.LocalDateInterval;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.ser.std.StdSerializer;
 
 /** Custom serialisering, deserialisering av LocalDateInterval. Json struktur blir en array med fom, tom dato på ISO format. */
 public class LocalDateIntervalFormatters {
+    private LocalDateIntervalFormatters() {
+        /* This utility class should not be instantiated */
+    }
 
     public static class Deserializer extends StdDeserializer<LocalDateInterval> {
         public Deserializer() {
@@ -22,31 +22,15 @@ public class LocalDateIntervalFormatters {
         }
 
         @Override
-        public LocalDateInterval deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JsonProcessingException {
-            if (p.isExpectedStartArrayToken()) {
-                JsonToken t = p.nextToken();
-                if (t == JsonToken.END_ARRAY) {
-                    return null;
-                }
-                String fom = null;
-                if (p.hasToken(JsonToken.VALUE_STRING)) {
-                    fom = p.getText().trim();
-                }
-                t = p.nextToken();
-                String tom = null;
-                if (p.hasToken(JsonToken.VALUE_STRING)) {
-                    tom = p.getText().trim();
-                }
-                LocalDateInterval dateInterval = LocalDateInterval.parseFrom(fom, tom);
-
-                t = p.nextToken();
-                if (t != JsonToken.END_ARRAY) {
-                    throw ctx.wrongTokenException(p, handledType(), JsonToken.END_ARRAY, "Expected array to end");
-                }
-
-                return dateInterval;
+        public LocalDateInterval deserialize(JsonParser p, DeserializationContext ctx) throws JacksonException {
+            JsonToken t = FormatterUtils.assertStartArrayGetNextToken(p, ctx, this);
+            if (t == JsonToken.END_ARRAY) {
+                return null;
             }
-            throw ctx.wrongTokenException(p, handledType(), JsonToken.VALUE_STRING, "Expected array or string.");
+            LocalDateInterval dateInterval = FormatterUtils.deserializeLocalDateInterval(p);
+
+            FormatterUtils.assertEndArray(p, ctx, this);
+            return dateInterval;
         }
     }
 
@@ -57,11 +41,10 @@ public class LocalDateIntervalFormatters {
         }
 
         @Override
-        public void serialize(LocalDateInterval value, JsonGenerator g, SerializerProvider provider)
-                throws IOException {
+        public void serialize(LocalDateInterval value, JsonGenerator g, SerializationContext provider)
+                throws JacksonException {
             g.writeStartArray();
-            g.writeObject(LocalDateInterval.formatDate(value.getFomDato(), "-"));
-            g.writeObject(LocalDateInterval.formatDate(value.getTomDato(), "-"));
+            FormatterUtils.serializeLocalDateInterval(value, g);
             g.writeEndArray();
         }
     }

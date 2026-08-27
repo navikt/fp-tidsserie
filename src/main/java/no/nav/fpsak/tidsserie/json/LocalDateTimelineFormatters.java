@@ -1,34 +1,33 @@
 package no.nav.fpsak.tidsserie.json;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.BeanProperty;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-
 import no.nav.fpsak.tidsserie.LocalDateSegment;
 import no.nav.fpsak.tidsserie.LocalDateTimeline;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.BeanProperty;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.ser.std.StdSerializer;
+
+import java.util.ArrayList;
 
 /**
  * Custom serializer/deserializer for LocalDateTimeline for å håndtere deserialisering av nøstede objekter uten å forurense json struktur
  * med class name eller andre koder.
  */
 public class LocalDateTimelineFormatters {
+    private LocalDateTimelineFormatters() {
+        /* This utility class should not be instantiated */
+    }
+
 
     @SuppressWarnings("rawtypes")
-    public static class Deserializer extends StdDeserializer<LocalDateTimeline> implements ContextualDeserializer {
+    public static class Deserializer extends StdDeserializer<LocalDateTimeline> {
 
         private JavaType valueType;
 
@@ -43,51 +42,42 @@ public class LocalDateTimelineFormatters {
 
         @SuppressWarnings("unchecked")
         @Override
-        public LocalDateTimeline deserialize(JsonParser p, DeserializationContext ctx) throws IOException, JsonProcessingException {
-            if (p.isExpectedStartArrayToken()) {
-                JsonToken t = p.nextToken();
-                if (t == JsonToken.END_ARRAY) {
-                    return null;
-                }
-                
-                JavaType parametricType = ctx.getTypeFactory().constructParametricType(LocalDateSegment.class, valueType);
-
-                Iterator<LocalDateSegment> iterator = p.getCodec().readValues(p, parametricType);
-                ArrayList<LocalDateSegment> list = new ArrayList<>();
-                for (; iterator.hasNext();) {
-                    list.add(iterator.next());
-                }
-
-                return new LocalDateTimeline(list);
+        public LocalDateTimeline deserialize(JsonParser p, DeserializationContext ctx) throws JacksonException {
+            JsonToken t = FormatterUtils.assertStartArrayGetNextToken(p, ctx, this);
+            if (t == JsonToken.END_ARRAY) {
+                return null;
             }
-            throw ctx.wrongTokenException(p, handledType(), JsonToken.VALUE_STRING, "Expected array or string.");
+
+            JavaType parametricType = ctx.getTypeFactory().constructParametricType(LocalDateSegment.class, valueType);
+            ArrayList<LocalDateSegment> list = new ArrayList<>();
+            while (t != JsonToken.END_ARRAY) {
+                list.add(p.readValueAs(parametricType));
+                t = p.nextToken();
+            }
+
+            return new LocalDateTimeline(list);
         }
 
         @Override
-        public JsonDeserializer<?> createContextual(DeserializationContext ctx, BeanProperty property) throws JsonMappingException {
-            JavaType wrapperType;
-            if (property == null) {
-                wrapperType = ctx.getContextualType();
-            } else {
-                wrapperType = property.getType();
-            }
-            JavaType valueType = wrapperType.containedType(0);
-            return new Deserializer(valueType);
+        public ValueDeserializer<?> createContextual(DeserializationContext ctx, BeanProperty property) throws JacksonException {
+            return new Deserializer(FormatterUtils.getJavaType(ctx, property));
         }
     }
 
     @SuppressWarnings("rawtypes")
     public static class Serializer extends StdSerializer<LocalDateTimeline> {
-        private static final JsonTimelineFormatter FORMATTER = new JsonTimelineFormatter();
 
         public Serializer() {
             super(LocalDateTimeline.class);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
-        public void serialize(LocalDateTimeline value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-            String json = FORMATTER.formatJson(value.toSegments());
-            gen.writeRawValue(json);
+        public void serialize(LocalDateTimeline value, JsonGenerator gen, SerializationContext provider) {
+            gen.writeStartArray();
+            value.segmenter()
+                    .forEach(segment -> FormatterUtils.serializeLocalDateSegment((LocalDateSegment) segment, gen));
+            gen.writeEndArray();
         }
 
     }

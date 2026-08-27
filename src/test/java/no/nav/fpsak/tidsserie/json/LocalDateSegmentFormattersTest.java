@@ -1,14 +1,13 @@
 package no.nav.fpsak.tidsserie.json;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import no.nav.fpsak.tidsserie.LocalDateInterval;
+import no.nav.fpsak.tidsserie.LocalDateSegment;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.Objects;
 
-import org.junit.jupiter.api.Test;
-
-import no.nav.fpsak.tidsserie.LocalDateInterval;
-import no.nav.fpsak.tidsserie.LocalDateSegment;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class LocalDateSegmentFormattersTest {
 
@@ -58,13 +57,12 @@ class LocalDateSegmentFormattersTest {
     }
 
     public static class Heisann {
-        private String hello = "hello";
-        private String bye = "bye";
+        private final String hello = "hello";
+        private final String bye = "bye";
 
         @Override
         public boolean equals(Object obj) {
-            Heisann hei = (Heisann) obj;
-            return Objects.equals(hello, hei.hello)
+            return obj instanceof Heisann hei && Objects.equals(hello, hei.hello)
                     && Objects.equals(bye, hei.bye);
         }
 
