@@ -263,7 +263,8 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
 
             @Override
             public void accept(LocalDateSegment<V> t) {
-                if (test.test(segmenterView, t, toSegments().headSet(t, false), toSegments().tailSet(t, false))) {
+                var tsegmenter = new TreeSet<>(segmenter());
+                if (test.test(segmenterView, t, tsegmenter.headSet(t, false), tsegmenter.tailSet(t, false))) {
                     segmenter.add(t);
                 }
             }
@@ -493,7 +494,7 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
         while (!dt.isAfter(endDate) && !dt.isAfter(maxLocalDate)) {
             LocalDate nextDt = dt.plus(period);
             // trekk 1 fra nextDt siden vi har fom/tom (ikke fom /til)
-            var nesteSegmenter = intersection(new LocalDateInterval(dt, nextDt.minusDays(1))).toSegments();
+            var nesteSegmenter = intersection(new LocalDateInterval(dt, nextDt.minusDays(1))).segmenter();
             segmenter.addAll(nesteSegmenter);
             dt = nextDt;
         }
@@ -546,17 +547,6 @@ public class LocalDateTimeline<V> implements Serializable, Iterable<LocalDateSeg
      */
     public LocalDateTimeline<V> filterValue(Predicate<V> predicate) {
         return collect((akseptert, ny, foregående, påfølgende) -> predicate.test(ny.getValue()), false);
-    }
-
-    /**
-     * @deprecated use {@link #getLocalDateIntervals()}
-     */
-    @Deprecated(forRemoval = true)
-    public NavigableSet<LocalDateInterval> getDatoIntervaller() {
-        if (isEmpty()) {
-            return Collections.emptyNavigableSet();
-        }
-        return segments.stream().map(LocalDateSegment::getLocalDateInterval).collect(Collectors.toCollection(TreeSet::new));
     }
 
     public NavigableSet<LocalDateInterval> getLocalDateIntervals() {

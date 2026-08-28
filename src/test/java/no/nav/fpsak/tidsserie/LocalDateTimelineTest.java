@@ -1,23 +1,21 @@
 package no.nav.fpsak.tidsserie;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import no.nav.fpsak.tidsserie.json.JsonTimelineFormatter;
+import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-
-import no.nav.fpsak.tidsserie.json.JsonTimelineFormatter;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class LocalDateTimelineTest {
 
@@ -80,7 +78,7 @@ class LocalDateTimelineTest {
                 new LocalDateSegment<>(d1, d2, 2)),
                 StandardCombinators::leftOnly);
 
-        assertThat(tidslinje.toSegments()).containsExactly(
+        assertThat(tidslinje.segmenter()).containsExactly(
                 new LocalDateSegment<>(d1, d1, 2),
                 new LocalDateSegment<>(d2, d2, 1)
         );
@@ -169,7 +167,7 @@ class LocalDateTimelineTest {
         LocalDateTimeline<String> crossJoined = timeline.crossJoin(annenTimeline,
                 StandardCombinators::coalesceLeftHandSide);
 
-        assertThat(crossJoined.toSegments()).as("startdato = " + today).containsAll(expectedSegmenter);
+        assertThat(crossJoined.segmenter()).as("startdato = " + today).containsAll(expectedSegmenter);
 
         assertThat(crossJoined).as("startdato = " + today).isEqualTo(new LocalDateTimeline<>(expectedSegmenter));
 
@@ -436,10 +434,10 @@ class LocalDateTimelineTest {
     @Test
     void skal_disjoint_med_annen_tidsserie() {
         LocalDateTimeline<String> tidslinje = basicDiscontinuousTimeline();
-        var segments = tidslinje.toSegments();
-        var segLast = segments.last();
+        var segments = tidslinje.segmenter();
+        var segLast = segments.getLast();
 
-        var annenTidsserie = new LocalDateTimeline<>(Arrays.asList(segLast));
+        var annenTidsserie = new LocalDateTimeline<>(Collections.singletonList(segLast));
 
         var segmentsUtenAnnen = new TreeSet<>(segments);
         segmentsUtenAnnen.remove(segLast);
